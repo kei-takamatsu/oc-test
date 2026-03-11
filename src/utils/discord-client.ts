@@ -44,6 +44,9 @@ const commands = [
     .addStringOption(option => 
       option.setName('instruction').setDescription('指示内容').setRequired(true)
     ),
+  new SlashCommandBuilder()
+    .setName('push')
+    .setDescription('GitHubに現在のコードをプッシュします'),
 ].map(command => command.toJSON());
 
 // コマンドの登録
@@ -107,6 +110,18 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
     await ProjectManager.addInstruction(instruction);
     await interaction.editReply(`📥 **指示を受理しました:**\n> ${instruction}\n\nエージェント（Antigravity）がこの指示を読み取り、実行を開始します。完了までお待ちください。`);
+  } else if (commandName === 'push') {
+    await interaction.deferReply();
+    try {
+      const result = await ProjectManager.runGitPush();
+      let response = `🚀 **GitHubへのプッシュを実行しました**\n\n`;
+      response += `🔗 **Repository:** ${result.repoUrl}\n`;
+      if (result.pagesUrl) response += `🌐 **Preview:** ${result.pagesUrl}\n`;
+      response += `\`\`\`\n${result.output}\n\`\`\``;
+      await interaction.editReply(response);
+    } catch (error: any) {
+      await interaction.editReply(`❌ **プッシュに失敗しました:** ${error.message}`);
+    }
   }
 });
 
@@ -161,10 +176,26 @@ client.on('messageCreate', async (message: Message) => {
         const text = message.content.replace(`<@${client.user!.id}>`, '').trim();
         
         // 指示文っぽいキーワードが含まれているか判定
-        const isInstructionLike = /指示|やって|作って|作成|追加|変更|修正|調べて|削除/.test(text);
+        const isInstructionLike = /指示|やって|作って|作成|追加|変更|修正|調べて|削除|プッシュ|push/.test(text);
 
         if (isInstructionLike) {
           console.log(`Natural language instruction detected: "${text}"`);
+          
+          if (/プッシュ|push/.test(text)) {
+            await message.reply('🚀 **GitHubへのプッシュを開始します...**');
+            try {
+              const result = await ProjectManager.runGitPush();
+              let response = `✅ **プッシュが完了しました！**\n\n`;
+              response += `🔗 **Repository:** ${result.repoUrl}\n`;
+              if (result.pagesUrl) response += `🌐 **Preview:** ${result.pagesUrl}\n`;
+              response += `\`\`\`\n${result.output}\n\`\`\``;
+              await message.reply(response);
+            } catch (error: any) {
+              await message.reply(`❌ **プッシュに失敗しました:** ${error.message}`);
+            }
+            return;
+          }
+
           await ProjectManager.addInstruction(text);
           await message.reply(`📥 **日本語での指示を受理しました:**\n> ${text}\n\nエージェントが作業を開始します。`);
           return;

@@ -6,6 +6,12 @@
 import fs from 'fs/promises';
 import path from 'path';
 
+export interface PushResult {
+  output: string;
+  repoUrl: string;
+  pagesUrl: string;
+}
+
 export class ProjectManager {
   private static taskListPath = '/Users/takamatsukei/.gemini/antigravity/brain/25ab6115-76ec-47f6-a81f-8acf2aebe005/task.md';
 
@@ -67,6 +73,53 @@ export class ProjectManager {
     } catch (error) {
       console.error('Error logging instruction:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Git Pushを実行し、関連URLを返す
+   */
+  static async runGitPush(): Promise<PushResult> {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execPromise = promisify(exec);
+
+    try {
+      const { stdout: repoRaw } = await execPromise('git remote get-url origin');
+      const repoUrl = repoRaw.trim().replace(/\.git$/, '');
+      
+      // GitHub Pages URLの推測
+      let pagesUrl = '';
+      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      if (match) {
+        let baseUrl = `https://${match[1]}.github.io/${match[2]}/`;
+        
+        // 直近で変更されたディレクトリ（clock-sampleなど）を特定してURLに付与
+        try {
+          const items = await fs.readdir(process.cwd(), { withFileTypes: true });
+          const dirs = items
+            .filter(item => item.isDirectory() && !item.name.startsWith('.') && !['node_modules', 'src', 'docs', 'scripts'].includes(item.name));
+          
+          if (dirs.length > 0) {
+            // 最も新しいディレクトリを取得 (暫定的に最初の有効なディレクトリ)
+            pagesUrl = `${baseUrl}${dirs[0].name}/`;
+          } else {
+            pagesUrl = baseUrl;
+          }
+        } catch (e) {
+          pagesUrl = baseUrl;
+        }
+      }
+
+      const { stdout, stderr } = await execPromise('git push origin main');
+      return {
+        output: stdout || stderr || 'Push successful',
+        repoUrl,
+        pagesUrl
+      };
+    } catch (error: any) {
+      console.error('Git push error:', error);
+      throw new Error(`Git push failed: ${error.message}`);
     }
   }
 }
