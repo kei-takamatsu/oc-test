@@ -176,9 +176,9 @@ client.on('messageCreate', async (message: Message) => {
         const text = message.content.replace(`<@${client.user!.id}>`, '').trim();
         
         // 指示文っぽいキーワードが含まれているか判定
-        const isInstructionLike = /指示|やって|作って|作成|追加|変更|修正|調べて|削除|プッシュ|push/.test(text);
+        const isInstructionLike = /指示|やって|作って|作成|追加|変更|修正|調べて|削除|プッシュ|push|インストール|設定|終わらせて|完了|進めて/.test(text);
 
-        if (isInstructionLike) {
+        if (isInstructionLike || text.length > 10) {
           console.log(`Natural language instruction detected: "${text}"`);
           
           if (/プッシュ|push/.test(text)) {
