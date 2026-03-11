@@ -1,10 +1,10 @@
 :root {
-    --bg-color: #0f172a;
-    --accent-color: #38bdf8;
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
+    --bg-color: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #666666;
+    --accent-color: #000000;
+    --border-color: #e5e5e5;
+    --glass-bg: rgba(255, 255, 255, 0.8);
 }
 
 * {
@@ -14,11 +14,11 @@
 }
 
 body {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Playfair Display', serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     min-height: 100vh;
-    min-height: -webkit-fill-available; /* Mobile safari fix */
+    min-height: -webkit-fill-available;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -26,108 +26,113 @@ body {
     padding: 20px;
 }
 
-/* ... (background-blobs styles unchanged) ... */
+/* Minimal Background */
+.background-blobs {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: radial-gradient(circle at 50% 50%, #fcfcfc 0%, #f0f0f0 100%);
+}
 
-/* Glass Card */
+.blob {
+    display: none; /* Removed colorful blobs */
+}
+
+/* Artsy Glass Card */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: clamp(24px, 5vw, 40px);
-    padding: clamp(32px, 8vw, 64px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-top: 1px solid var(--text-primary);
+    border-bottom: 1px solid var(--text-primary);
+    padding: clamp(40px, 10vw, 80px) 0;
     text-align: center;
     width: 100%;
-    max-width: 540px;
-    margin: auto; /* Ensure centering in flex parent */
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    max-width: 600px;
+    margin: auto;
+    position: relative;
 }
 
-.glass-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.7);
+.glass-card::before, .glass-card::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 40px;
+    background: var(--text-primary);
 }
+
+.glass-card::before { top: -40px; }
+.glass-card::after { bottom: -40px; }
 
 header h1 {
-    font-size: clamp(0.75rem, 2.5vw, 1rem);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
     font-weight: 300;
     text-transform: uppercase;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.5em;
     color: var(--text-secondary);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 #date-display {
-    font-size: clamp(1.1rem, 4vw, 1.5rem);
-    font-weight: 600;
-    margin-bottom: clamp(24px, 6vw, 48px);
-    letter-spacing: 0.05em;
+    font-size: clamp(1.2rem, 4vw, 1.8rem);
+    font-weight: 400;
+    font-style: italic;
+    margin-bottom: 40px;
+    letter-spacing: 0.1em;
 }
 
 /* Clock Display */
 .clock-display {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(3rem, 15vw, 6.5rem);
-    font-weight: 500;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(4rem, 20vw, 8rem);
+    font-weight: 700;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: clamp(4px, 1vw, 12px);
-    margin-bottom: clamp(24px, 6vw, 48px);
-    color: var(--accent-color);
-    text-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+    gap: 0;
+    margin-bottom: 40px;
+    color: var(--text-primary);
+    line-height: 1;
 }
 
 .separator {
-    color: var(--text-secondary);
-    opacity: 0.5;
-    animation: blink 1.2s infinite;
-}
-
-@keyframes blink {
-    0%, 100% { opacity: 0.1; transform: scale(0.9); }
-    50% { opacity: 0.9; transform: scale(1.1); }
+    font-weight: 400;
+    opacity: 0.3;
+    margin: 0 -0.05em;
 }
 
 /* Footer Info */
 .footer-info {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    font-size: clamp(0.7rem, 2vw, 0.85rem);
+    gap: 16px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.7rem;
     color: var(--text-secondary);
-    border-top: 1px solid var(--glass-border);
-    padding-top: 24px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
 }
 
 .status-badge {
-    padding: 6px 16px;
-    background: rgba(56, 189, 248, 0.15);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    border-radius: 100px;
-    color: var(--accent-color);
-    font-weight: 600;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--text-secondary);
+    color: var(--text-secondary);
 }
 
 #location-name {
     font-weight: 600;
+    color: var(--text-primary);
 }
 
-/* Responsive adjustments for extremely small/narrow screens */
+/* Responsive adjustments */
 @media (max-width: 400px) {
     .glass-card {
-        padding: 32px 20px;
-        border-radius: 24px;
-    }
-    .clock-display {
-        gap: 2px;
-    }
-    .footer-info {
-        flex-direction: column;
-        gap: 12px;
+        padding: 60px 0;
     }
 }
