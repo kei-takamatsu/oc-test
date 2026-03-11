@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Digital Clock</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    
+    <main class="container">
+        <div class="glass-card">
+            <header>
+                <h1>Current Time</h1>
+                <p id="date-display">2026.03.11 WED</p>
+            </header>
+            
+            <div class="clock-display">
+                <span id="hours">00</span>
+                <span class="separator">:</span>
+                <span id="minutes">00</span>
+                <span class="separator">:</span>
+                <span id="seconds">00</span>
+            </div>
+            
+            <div class="footer-info">
+                <span class="status-badge">Live Updates</span>
+                <span id="location-name">Antigravity Lab</span>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "oc-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "tsx watch src/utils/discord-client.ts",
+    "preview": "serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/kei-takamatsu/oc-test/issues"
+  },
+  "homepage": "https://github.com/kei-takamatsu/oc-test#readme",
+  "dependencies": {
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^6.1.1",
+    "@types/node": "^25.4.0",
+    "serve": "^14.2.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
