@@ -145,12 +145,21 @@ header h1 {
     margin-bottom: 40px;
     color: var(--text-primary);
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+#hours, #minutes, #seconds {
+    display: inline-block;
+    min-width: 1.15em;
+    text-align: center;
 }
 
 .separator {
     font-weight: 400;
     opacity: 0.3;
-    margin: 0 -0.05em;
+    width: 0.4em;
+    display: inline-block;
+    text-align: center;
 }
 
 /* Footer Info */
