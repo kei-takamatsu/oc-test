@@ -146,20 +146,24 @@ header h1 {
     color: var(--text-primary);
     line-height: 1;
     font-variant-numeric: tabular-nums;
+    /* Fixed container width to prevent card resizing */
+    width: 100%;
 }
 
 #hours, #minutes, #seconds {
     display: inline-block;
-    min-width: 1.15em;
+    width: 1.5ch; /* Strictly fixed width based on character unit */
     text-align: center;
+    flex-shrink: 0;
 }
 
 .separator {
     font-weight: 400;
     opacity: 0.3;
-    width: 0.4em;
+    width: 0.5ch; /* Fixed width separator */
     display: inline-block;
     text-align: center;
+    flex-shrink: 0;
 }
 
 /* Footer Info */
