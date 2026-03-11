@@ -197,7 +197,7 @@ client.on('messageCreate', async (message: Message) => {
           }
 
           await ProjectManager.addInstruction(text);
-          await message.reply(`📥 **日本語での指示を受理しました:**\n> ${text}\n\nエージェントが作業を開始します。`);
+          await message.reply(`📥 **新しい指示を受理しました:**\n> ${text}\n\nエージェント（Antigravity）がこの指示を読み取り、作業を開始します。完了後、自動的にここへ報告し、GitHub Pages も更新されます。しばらくお待ちください！`);
           return;
         }
 

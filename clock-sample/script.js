@@ -21,8 +21,47 @@ function updateClock() {
     document.getElementById('date-display').textContent = `${year}.${month}.${date} ${day}`;
 }
 
+function generateCalendar() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const today = now.getDate();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const calendarEl = document.getElementById('calendar');
+    calendarEl.innerHTML = '';
+
+    // Weekday headers
+    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    weekdays.forEach(day => {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-header';
+        dayEl.textContent = day;
+        calendarEl.appendChild(dayEl);
+    });
+
+    // Empty cells for padding
+    for (let i = 0; i < firstDay; i++) {
+        const emptyEl = document.createElement('div');
+        emptyEl.className = 'calendar-day empty';
+        calendarEl.appendChild(emptyEl);
+    }
+
+    // Days of the month
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'calendar-day';
+        if (d === today) dayEl.classList.add('today');
+        dayEl.textContent = d;
+        calendarEl.appendChild(dayEl);
+    }
+}
+
 // Initial call
 updateClock();
+generateCalendar();
 
 // Update every second
 setInterval(updateClock, 1000);

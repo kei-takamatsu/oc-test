@@ -81,8 +81,56 @@ header h1 {
     font-size: clamp(1.2rem, 4vw, 1.8rem);
     font-weight: 400;
     font-style: italic;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     letter-spacing: 0.1em;
+}
+
+/* Calendar Display */
+.calendar-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 40px;
+    padding: 20px 40px;
+    font-family: 'Outfit', sans-serif;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.calendar-header {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 0;
+}
+
+.calendar-day {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    padding: 8px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-family: 'Playfair Display', serif;
+}
+
+.calendar-day.today {
+    font-weight: 700;
+    font-style: italic;
+}
+
+.calendar-day.today::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--text-primary);
+    border-radius: 50%;
+    opacity: 0.3;
+}
+
+.calendar-day.empty {
+    opacity: 0;
 }
 
 /* Clock Display */
