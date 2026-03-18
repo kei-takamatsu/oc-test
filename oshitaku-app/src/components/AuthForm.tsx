@@ -50,8 +50,8 @@ export const AuthForm: React.FC = () => {
         if (error) throw error;
         setError('確認メールを送信しました。メールをチェックしてください。');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

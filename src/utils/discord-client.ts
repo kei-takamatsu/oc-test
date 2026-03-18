@@ -6,6 +6,8 @@
 import { Client, GatewayIntentBits, Message, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import * as dotenv from 'dotenv';
 import { ProjectManager } from '../core/project-manager.ts';
+import { AIClient } from './ai-client.ts';
+import { startApiServer } from '../server/api.ts';
 
 console.log('Starting Discord bot...');
 const result = dotenv.config();
@@ -14,6 +16,12 @@ if (result.error) {
 } else {
   console.log('.env file loaded successfully.');
 }
+
+// Initialize AI Client
+AIClient.init();
+
+// Start API Server
+startApiServer();
 
 const client = new Client({
   intents: [
@@ -93,9 +101,15 @@ const registerCommands = async () => {
   }
 };
 
-client.once('clientReady', (readyClient) => {
+client.once('ready', (readyClient) => {
   console.log(`Bot is ready! Logged in as ${readyClient.user.tag}`);
   registerCommands();
+  
+  // 初期ステータスの設定
+  readyClient.user.setPresence({
+    activities: [{ name: 'MacBook for instructions', type: 3 }], // Watching
+    status: 'online',
+  });
 });
 
 // スラッシュコマンドのインタラクション処理
@@ -116,8 +130,12 @@ client.on('interactionCreate', async (interaction) => {
   } else if (commandName === 'ask') {
     const query = interaction.options.getString('query', true);
     await interaction.deferReply();
-    // TODO: ここでエージェント（Antigravity）の推論をシミュレート
-    await interaction.editReply(`💡 **相談内容:** ${query}\n\nエージェントとしての回答を生成中です... 現在のプロジェクトコンテキスト（task.mdやソースコード）を考慮して回答する準備をしています。`);
+    
+    // 現在の進捗状況をコンテキストとして取得し、AIに渡す
+    const context = await ProjectManager.getProgressSummary();
+    const answer = await AIClient.ask(query, context);
+    
+    await interaction.editReply(`💡 **質問:** ${query}\n\n${answer}`);
   } else if (commandName === 'instruct') {
     const instruction = interaction.options.getString('instruction', true);
     await interaction.deferReply();
@@ -186,13 +204,17 @@ client.on('messageCreate', async (message: Message) => {
 
       // メンション時のデフォルト挙動 or 自然言語での指示
       if (isMentioned) {
+        if ('sendTyping' in message.channel) {
+          await (message.channel as any).sendTyping();
+        }
         const text = message.content.replace(`<@${client.user!.id}>`, '').trim();
         
-        // 指示文っぽいキーワードが含まれているか判定
-        const isInstructionLike = /指示|やって|作って|作成|追加|変更|修正|調べて|削除|プッシュ|push|インストール|設定|終わらせて|完了|進めて/.test(text);
+        // AIを使って意図を判定する
+        const intent = await AIClient.determineIntent(text);
 
-        if (isInstructionLike || text.length > 10) {
-          console.log(`Natural language instruction detected: "${text}"`);
+        if (intent.isInstruction || text.length > Math.max(20, text.length)) { 
+          // 意図がタスク指示である場合、もしくはAIが利用不可で長文の場合 (フォールバック)
+          console.log(`Instruction detected by AI: "${text}"`);
           
           if (/プッシュ|push/.test(text)) {
             await message.reply('🚀 **GitHubへのプッシュを開始します...**');
@@ -210,13 +232,24 @@ client.on('messageCreate', async (message: Message) => {
           }
 
           await ProjectManager.addInstruction(text);
-          await message.reply(`📥 **新しい指示を受理しました:**\n> ${text}\n\nエージェント（Antigravity）がこの指示を読み取り、作業を開始します。完了後、自動的にここへ報告し、GitHub Pages も更新されます。しばらくお待ちください！`);
+          // 念のためタスクDBにも記録する
+          await ProjectManager.addTask(text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+          
+          await message.reply(`📥 **新しい指示を受理しました:**\n> ${text}\n\nエージェント（Antigravity）がこの指示を読み取り、作業を開始します！`);
           return;
         }
 
-        console.log('Sending default reply for mention...');
-        const summary = await ProjectManager.getProgressSummary();
-        await message.reply(`こんにちは！Antigravityです。現在の進捗はこんな感じです：\n\n${summary}\n\n具体的な指示は「〇〇を作って」のように話しかけてもらうか、\`/instruct\` を使ってくださいね。`);
+        // 会話やただの質問と判定された場合、AIの返答を返す
+        console.log('Sending conversational reply for mention...');
+        const context = await ProjectManager.getProgressSummary();
+        let aiResponse = intent.response;
+        
+        // intent.response が空（AIが無効）の場合はデフォルトの返答
+        if (!aiResponse) {
+          aiResponse = `こんにちは！Antigravityです。現在の進捗はこんな感じです：\n\n${context}\n\n具体的な指示は「〇〇を作って」のように話しかけてもらうか、\`/instruct\` を使ってくださいね。`;
+        }
+        
+        await message.reply(aiResponse);
         console.log('Reply sent successfully.');
       }
     } catch (error) {

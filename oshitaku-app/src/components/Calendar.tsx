@@ -25,9 +25,11 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick }) => {
     return parseInt(y) === year && parseInt(m) === month + 1;
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const perfectDaysCount = currentMonthDays.filter(([_, status]) => status.morning && status.evening).length;
   // 仮の計算：朝夜の合計の割合
   const totalTasksInMonth = days * 2; // シンプルに朝夜1回ずつと仮定
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const completedTasksInMonth = currentMonthDays.reduce((acc, [_, status]) => {
     return acc + (status.morning ? 1 : 0) + (status.evening ? 1 : 0);
   }, 0);

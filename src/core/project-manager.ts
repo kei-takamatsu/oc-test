@@ -5,6 +5,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { db } from '../db/database.ts';
 
 export interface PushResult {
   output: string;
@@ -13,32 +14,43 @@ export interface PushResult {
 }
 
 export class ProjectManager {
-  private static taskListPath = '/Users/takamatsukei/.gemini/antigravity/brain/7e59544c-ca45-471c-a9d5-013e8cf2e30c/task.md';
-
   /**
-   * task.mdから現在のタスク進捗を取得する
+   * DBから現在のタスク進捗を取得する
    */
   static async getProgressSummary(): Promise<string> {
     try {
-      const content = await fs.readFile(this.taskListPath, 'utf-8');
-      const lines = content.split('\n');
+      const tasks = await db.all<any>('SELECT * FROM tasks ORDER BY created_at DESC');
       
-      const todo = lines.filter((l: string) => l.includes('- [ ]')).length;
-      const inProgress = lines.filter((l: string) => l.includes('- [/]')).length;
-      const done = lines.filter((l: string) => l.includes('- [x]')).length;
+      const todo = tasks.filter(t => t.status === 'todo').length;
+      const inProgress = tasks.filter(t => t.status === 'in_progress').length;
+      const done = tasks.filter(t => t.status === 'done').length;
 
       let summary = `📊 **現在の進捗状況**\n`;
       summary += `✅ 完了: ${done}\n`;
       summary += `🚧 進行中: ${inProgress}\n`;
       summary += `📝 未完了: ${todo}\n\n`;
       
+      const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
       summary += `**進行中のタスク:**\n`;
-      summary += lines.filter((l: string) => l.includes('- [/]')).map((l: string) => l.replace('- [/]', '•').trim()).join('\n') || 'なし';
+      summary += inProgressTasks.length > 0
+        ? inProgressTasks.map(t => `• ${t.description}`).join('\n')
+        : 'なし';
 
       return summary;
     } catch (error) {
-      console.error('Error reading task.md:', error);
+      console.error('Error reading tasks from DB:', error);
       return '進捗情報を取得できませんでした。';
+    }
+  }
+
+  /**
+   * DBに新しいタスクを追加する
+   */
+  static async addTask(description: string): Promise<void> {
+    try {
+      await db.run('INSERT INTO tasks (description, status) VALUES (?, ?)', [description, 'todo']);
+    } catch (error) {
+      console.error('Error adding task:', error);
     }
   }
 
@@ -61,9 +73,10 @@ export class ProjectManager {
   }
 
   /**
-   * 開発指示を記録する
+   * 開発指示をデータベースとファイルの両方に記録する
    */
   static async addInstruction(text: string): Promise<void> {
+    // 1. レガシーなMarkdownへの記録 (後方互換性のため残す)
     const instructionPath = path.resolve(process.cwd(), 'docs/instructions.md');
     const timestamp = new Date().toLocaleString('ja-JP');
     const entry = `## [${timestamp}]\n${text}\n\n`;
@@ -71,7 +84,14 @@ export class ProjectManager {
     try {
       await fs.appendFile(instructionPath, entry, 'utf-8');
     } catch (error) {
-      console.error('Error logging instruction:', error);
+      console.error('Error logging instruction to file:', error);
+    }
+
+    // 2. 新しいSQLiteDBへの記録
+    try {
+      await db.run('INSERT INTO instructions (content) VALUES (?)', [text]);
+    } catch (error) {
+      console.error('Error logging instruction to DB:', error);
       throw error;
     }
   }

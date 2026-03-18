@@ -1,4 +1,4 @@
-import { Zap, Droplets, PenTool as Tooth, Shirt, Bath, Book, Backpack, LogOut, Sunset, Sun, Calendar as CalendarIcon, CheckCircle2, Circle, Settings } from 'lucide-react';
+// No imports needed
 
 export type TaskTime = 'morning' | 'evening';
 

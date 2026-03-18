@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Interaction Logs</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #000000; color: #ffffff; padding: 2rem; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.3em; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-bottom: 2rem; color: #888; }
+        .log-entry { margin-bottom: 2rem; border-left: 2px solid #333; padding-left: 1.5rem; }
+        .timestamp { font-size: 0.8rem; color: #555; margin-bottom: 0.5rem; font-family: monospace; }
+        .content { font-size: 1.1rem; color: #ddd; }
+        .nav { margin-bottom: 2rem; }
+        a { color: #888; text-decoration: none; border: 1px solid #333; padding: 0.5rem 1rem; border-radius: 4px; transition: all 0.3s; }
+        a:hover { background: #333; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="index.html">← BACK</a>
+        </div>
+        <h1>Discord Logs</h1>
+        <div id="logs">Loading logs...</div>
+    </div>
+
+    <script>
+        async function loadLogs() {
+            try {
+                // instructions.md は docs ディレクトリにあるが、serve はルートから配信
+                const response = await fetch('docs/instructions.md');
+                const text = await response.text();
+                
+                const logContainer = document.getElementById('logs');
+                logContainer.innerHTML = '';
+
+                const entries = text.split('## ').filter(e => e.trim());
+                entries.reverse().forEach(entry => {
+                    const lines = entry.trim().split('\n');
+                    const timestamp = lines[0].replace('[', '').replace(']', '');
+                    const content = lines.slice(1).join('<br>').trim();
+
+                    if (!content) return;
+
+                    const div = document.createElement('div');
+                    div.className = 'log-entry';
+                    div.innerHTML = `
+                        <div class="timestamp">${timestamp}</div>
+                        <div class="content">${content}</div>
+                    `;
+                    logContainer.appendChild(div);
+                });
+            } catch (e) {
+                document.getElementById('logs').textContent = 'Failed to load logs.';
+            }
+        }
+        loadLogs();
+        // 30秒ごとに更新
+        setInterval(loadLogs, 30000);
+    </script>
+</body>
+</html>

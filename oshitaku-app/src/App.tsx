@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, LogOut, Calendar as CalendarIcon, Settings, User as UserIcon, ChevronLeft, CheckCircle2, Trash2, Lock } from 'lucide-react';
+import { Sun, Moon, Calendar as CalendarIcon, Settings, User as UserIcon, ChevronLeft, CheckCircle2, Trash2, Lock } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskCard } from './components/TaskCard';
 import { AuthForm } from './components/AuthForm';
@@ -209,8 +209,8 @@ const AppContent: React.FC = () => {
       setPassMessage({ text: 'パスワードを更新しました', type: 'success' });
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      setPassMessage({ text: err.message, type: 'error' });
+    } catch (err: unknown) {
+      setPassMessage({ text: err instanceof Error ? err.message : 'An error occurred', type: 'error' });
     } finally {
       setPassLoading(false);
     }
