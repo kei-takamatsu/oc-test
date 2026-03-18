@@ -35,13 +35,18 @@ jobs:
       - name: Build Oshitaku App
         working-directory: ./oshitaku-app
         run: |
+          echo "Installing dependencies..."
           npm install
+          echo "Building application..."
           npm run build
-          # Replace source with build output for GitHub Pages deployment
-          # We keep the source safe in the repo, but the deployment artifact will have the built files.
-          find . -maxdepth 1 ! -name 'dist' ! -name '.' ! -name 'node_modules' -exec rm -rf {} +
-          cp -r dist/* ./
-          rm -rf dist
+          echo "Replacing source files with build output..."
+          # More explicit cleanup and move
+          ls -la dist/
+          mv dist/index.html index.html.new
+          cp -r dist/* .
+          mv index.html.new index.html
+          echo "Cleanup complete. Current directory status:"
+          ls -la
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
