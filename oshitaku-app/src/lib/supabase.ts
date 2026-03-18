@@ -1,4 +1,4 @@
-// Trigger redeploy with new secrets
+// Final redeploy with corrected secrets
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // Supabase設定（GitHub Pagesなどのデプロイ環境用にハードコード）
