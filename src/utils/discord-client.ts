@@ -23,6 +23,19 @@ const client = new Client({
   ],
 });
 
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled promise rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  process.exit(1);
+});
+
+process.on('exit', (code) => {
+  console.log(`Process is exiting with code: ${code}`);
+});
+
 // スラッシュコマンドの定義
 const commands = [
   new SlashCommandBuilder().setName('status').setDescription('現在のプロジェクトの進捗を確認します'),

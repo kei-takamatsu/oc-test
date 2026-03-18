@@ -13,7 +13,7 @@ export interface PushResult {
 }
 
 export class ProjectManager {
-  private static taskListPath = '/Users/takamatsukei/.gemini/antigravity/brain/25ab6115-76ec-47f6-a81f-8acf2aebe005/task.md';
+  private static taskListPath = '/Users/takamatsukei/.gemini/antigravity/brain/7e59544c-ca45-471c-a9d5-013e8cf2e30c/task.md';
 
   /**
    * task.mdから現在のタスク進捗を取得する

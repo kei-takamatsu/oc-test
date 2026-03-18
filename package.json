@@ -8,7 +8,8 @@
   },
   "type": "module",
   "scripts": {
-    "start": "tsx watch src/utils/discord-client.ts",
+    "start": "tsx watch --exclude docs --exclude logs src/utils/discord-client.ts",
+    "dev": "concurrently \"npm start\" \"npm run preview\"",
     "preview": "serve .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
     "@types/node": "^25.4.0",
+    "concurrently": "^9.2.1",
     "eslint": "^10.0.3",
     "prettier": "^3.8.1",
     "serve": "^14.2.6",

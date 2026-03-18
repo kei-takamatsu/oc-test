@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: hsl(215 100% 60%);
+  --color-primary-foreground: hsl(210 40% 98%);
+  --color-morning: hsl(45 100% 70%);
+  --color-morning-foreground: hsl(45 30% 20%);
+  --color-evening: hsl(260 80% 80%);
+  --color-evening-foreground: hsl(260 30% 20%);
+  --radius-lg: 1.5rem;
+}
+
+:root {
+  --primary: 215 100% 60%;
+  --primary-foreground: 210 40% 98%;
+  
+  --morning: 45 100% 70%;
+  --morning-foreground: 45 30% 20%;
+  
+  --evening: 260 80% 80%;
+  --evening-foreground: 260 30% 20%;
+  
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 222 47% 11%;
+  
+  --radius: 1.5rem;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+  
+  .premium-button {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .nav-tab {
+    @apply px-6 py-2 rounded-full font-medium transition-all duration-300;
+  }
+}
+
+.animate-pop {
+  animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
