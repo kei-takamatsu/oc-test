@@ -60,33 +60,63 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
-  // 共通データ（履歴・名前）の読み込み
+  // 共通データ（履歴・名前）の読み込みと移行
   useEffect(() => {
     const loadCommonData = async () => {
-      if (authLoading) return;
-      
-      const userKey = user?.email || 'guest';
-      
-      // 履歴の読み込み
-      const savedHistory = localStorage.getItem(`oshitaku_history_${userKey}`);
-      if (savedHistory) {
-        setHistory(JSON.parse(savedHistory));
+      if (authLoading || isMockMode || !user) {
+        if (!authLoading && (isMockMode || !user)) {
+          const userKey = user?.email || 'guest';
+          const savedHistory = localStorage.getItem(`oshitaku_history_${userKey}`);
+          if (savedHistory) setHistory(JSON.parse(savedHistory));
+          const savedName = localStorage.getItem(`oshitaku_user_name_${userKey}`);
+          if (savedName) setUserName(savedName);
+        }
+        return;
       }
+      
+      try {
+        // Supabaseからプロファイルを読み込み
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('display_name, history')
+          .eq('id', user.id)
+          .single();
 
-      // 名前の読み込み
-      const savedName = localStorage.getItem(`oshitaku_user_name_${userKey}`);
-      if (savedName) {
-        setUserName(savedName);
-      } else if (user?.user_metadata?.full_name) {
-        setUserName(user.user_metadata.full_name);
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows found"
+
+        if (data) {
+          if (data.display_name) setUserName(data.display_name);
+          if (data.history) setHistory(data.history as Record<string, { morning: boolean; evening: boolean }>);
+          
+          // ローカルストレージも同期しておく（オフライン対応用）
+          localStorage.setItem(`oshitaku_user_name_${user.email}`, data.display_name || '');
+          localStorage.setItem(`oshitaku_history_${user.email}`, JSON.stringify(data.history));
+        } else {
+          // データがない場合は移行を試みる
+          const localName = localStorage.getItem(`oshitaku_user_name_${user.email}`) || user.user_metadata?.full_name || 'ゲスト';
+          const localHistoryStr = localStorage.getItem(`oshitaku_history_${user.email}`);
+          const localHistory = localHistoryStr ? JSON.parse(localHistoryStr) : {};
+          
+          setUserName(localName);
+          setHistory(localHistory);
+          
+          // Supabaseへ初回保存（移行）
+          await supabase.from('user_profiles').upsert({
+            id: user.id,
+            display_name: localName,
+            history: localHistory
+          });
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
       }
     };
     loadCommonData();
   }, [user, authLoading]);
 
-  // 選択された日付のタスク読み込み
+  // 選択された日付のタスク読み込みと移行
   useEffect(() => {
-    const loadTasksData = () => {
+    const loadTasksData = async () => {
       if (authLoading) return;
       
       const userKey = user?.email || 'guest';
@@ -94,22 +124,45 @@ const AppContent: React.FC = () => {
 
       if (isMockMode || !user) {
         const savedTasks = localStorage.getItem(`tasks_${userKey}_${targetDate}`);
-        if (savedTasks) {
-          setTasks(JSON.parse(savedTasks));
-        } else {
-          setTasks(INITIAL_TASKS);
-        }
-      } else {
-        // TODO: Supabaseからの読み込み実装はフェーズが進んだら行う
-        const savedTasks = localStorage.getItem(`tasks_${userKey}_${targetDate}`);
         setTasks(savedTasks ? JSON.parse(savedTasks) : INITIAL_TASKS);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_tasks')
+          .select('tasks')
+          .eq('user_id', user.id)
+          .eq('date', targetDate)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+
+        if (data) {
+          setTasks(data.tasks as Task[]);
+          localStorage.setItem(`tasks_${user.email}_${targetDate}`, JSON.stringify(data.tasks));
+        } else {
+          // データがない場合はローカルから移行
+          const savedTasks = localStorage.getItem(`tasks_${user.email}_${targetDate}`);
+          const tasksToSet = savedTasks ? JSON.parse(savedTasks) : INITIAL_TASKS;
+          setTasks(tasksToSet);
+          
+          // Supabaseへ保存（移行）
+          await supabase.from('user_tasks').upsert({
+            user_id: user.id,
+            date: targetDate,
+            tasks: tasksToSet
+          });
+        }
+      } catch (err) {
+        console.error('Error loading tasks:', err);
       }
     };
 
     loadTasksData();
   }, [user, authLoading, selectedDate]);
 
-  const handleToggle = (id: string) => {
+  const handleToggle = async (id: string) => {
     const updatedTasks = tasks.map(t => 
       t.id === id ? { ...t, done: !t.done } : t
     );
@@ -146,6 +199,26 @@ const AppContent: React.FC = () => {
     
     setHistory(newHistory);
     localStorage.setItem(`oshitaku_history_${userKey}`, JSON.stringify(newHistory));
+
+    // Supabaseへ保存
+    if (!isMockMode && user) {
+      try {
+        await Promise.all([
+          supabase.from('user_tasks').upsert({
+            user_id: user.id,
+            date: targetDate,
+            tasks: updatedTasks
+          }),
+          supabase.from('user_profiles').upsert({
+            id: user.id,
+            display_name: userName,
+            history: newHistory
+          })
+        ]);
+      } catch (err) {
+        console.error('Error saving to Supabase:', err);
+      }
+    }
   };
 
   const handleCalendarDateClick = (dateKey: string) => {
@@ -153,7 +226,7 @@ const AppContent: React.FC = () => {
     setShowHistory(false);
   };
 
-  const addTask = (time: TaskTime) => {
+  const addTask = async (time: TaskTime) => {
     if (!newTaskText) return;
 
     const newTask: Task = {
@@ -170,15 +243,39 @@ const AppContent: React.FC = () => {
     const userKey = user?.email || 'guest';
     localStorage.setItem(`tasks_${userKey}_${targetDate}`, JSON.stringify(updatedTasks));
     setNewTaskText('');
+
+    if (!isMockMode && user) {
+      try {
+        await supabase.from('user_tasks').upsert({
+          user_id: user.id,
+          date: targetDate,
+          tasks: updatedTasks
+        });
+      } catch (err) {
+        console.error('Error adding task to Supabase:', err);
+      }
+    }
   };
 
-  const deleteTask = (id: string) => {
+  const deleteTask = async (id: string) => {
     if (!window.confirm('この おしたく を けしても いいかな？')) return;
     const updatedTasks = tasks.filter(t => t.id !== id);
     setTasks(updatedTasks);
     const targetDate = selectedDate;
     const userKey = user?.email || 'guest';
     localStorage.setItem(`tasks_${userKey}_${targetDate}`, JSON.stringify(updatedTasks));
+
+    if (!isMockMode && user) {
+      try {
+        await supabase.from('user_tasks').upsert({
+          user_id: user.id,
+          date: targetDate,
+          tasks: updatedTasks
+        });
+      } catch (err) {
+        console.error('Error deleting task from Supabase:', err);
+      }
+    }
   };
 
   const handlePasswordChange = async () => {
@@ -388,10 +485,24 @@ const AppContent: React.FC = () => {
                   <input 
                     type="text" 
                     value={userName}
-                    onChange={(e) => {
-                      setUserName(e.target.value);
+                    onChange={async (e) => {
+                      const newName = e.target.value;
+                      setUserName(newName);
+                      
                       const userKey = user?.email || 'guest';
-                      localStorage.setItem(`oshitaku_user_name_${userKey}`, e.target.value);
+                      localStorage.setItem(`oshitaku_user_name_${userKey}`, newName);
+                      
+                      if (!isMockMode && user) {
+                        try {
+                          await supabase.from('user_profiles').upsert({
+                            id: user.id,
+                            display_name: newName,
+                            history: history
+                          });
+                        } catch (err) {
+                          console.error('Error updating name in Supabase:', err);
+                        }
+                      }
                     }}
                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-slate-700 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                     placeholder="おなまえを おしえてね"
