@@ -62,6 +62,9 @@ jobs:
             cd ..
           fi
           
+          echo "Verifying staged index.html content for oshitaku-app..."
+          cat staging/oshitaku-app/index.html
+          
           echo "Staging complete. Staging folder structure:"
           find staging -maxdepth 2
         env:
