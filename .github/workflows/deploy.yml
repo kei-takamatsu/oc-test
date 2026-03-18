@@ -47,6 +47,8 @@ jobs:
           mv index.html.new index.html
           echo "Cleanup complete. Current directory status:"
           ls -la
+          echo "Built index.html content:"
+          cat index.html
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
