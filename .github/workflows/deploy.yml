@@ -39,6 +39,19 @@ jobs:
           echo "Staging root..."
           cp index.html staging/
           
+          echo "Validating environment variables for oshitaku-app..."
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "::warning:: VITE_SUPABASE_URL is MISSING or EMPTY"
+          else
+            echo "VITE_SUPABASE_URL is set (length: ${#VITE_SUPABASE_URL})"
+          fi
+          
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::warning:: VITE_SUPABASE_ANON_KEY is MISSING or EMPTY"
+          else
+            echo "VITE_SUPABASE_ANON_KEY is set (length: ${#VITE_SUPABASE_ANON_KEY})"
+          fi
+          
           if [ -d "clock-sample" ]; then
             echo "Staging clock-sample..."
             cp -r clock-sample staging/
