@@ -62,11 +62,8 @@ jobs:
             cd ..
           fi
           
-          echo "Verifying staged index.html content for oshitaku-app..."
-          cat staging/oshitaku-app/index.html
-          
           echo "Staging complete. Staging folder structure:"
-          find staging -maxdepth 2
+          ls -R staging
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
