@@ -3,10 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/oc-test/oshitaku-app/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/oc-test/oshitaku-app/' : '/',
   plugins: [
     react(),
     tailwindcss(),
   ],
-})
+}))
