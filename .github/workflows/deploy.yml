@@ -37,8 +37,11 @@ jobs:
         run: |
           npm install
           npm run build
-          # Move built files to oshitaku-app root for cleaner URLs
+          # Replace source with build output for GitHub Pages deployment
+          # We keep the source safe in the repo, but the deployment artifact will have the built files.
+          find . -maxdepth 1 ! -name 'dist' ! -name '.' ! -name 'node_modules' -exec rm -rf {} +
           cp -r dist/* ./
+          rm -rf dist
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -50,6 +53,9 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+          # Optional: exclude node_modules from artifact to keep it small
+          # (though they are in subfolders and upload-pages-artifact usually follows .gitignore or is selective)
+
           
       - name: Deploy to GitHub Pages
         id: deployment
