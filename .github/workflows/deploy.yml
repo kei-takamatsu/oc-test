@@ -32,23 +32,34 @@ jobs:
           cache: 'npm'
           cache-dependency-path: './oshitaku-app/package-lock.json'
 
-      - name: Build Oshitaku App
-        working-directory: ./oshitaku-app
+      - name: Build and Stage All Projects
         run: |
-          echo "Installing dependencies..."
+          mkdir -p staging
+          
+          echo "Staging root index.html..."
+          cp index.html staging/
+          
+          echo "Staging clock-sample..."
+          cp -r clock-sample staging/
+          
+          echo "Building and Staging Oshitaku App..."
+          cd oshitaku-app
           npm install
-          echo "Building application..."
           npm run build
-          echo "Replacing source files with build output..."
-          # More explicit cleanup and move
-          ls -la dist/
-          mv dist/index.html index.html.new
-          cp -r dist/* .
-          mv index.html.new index.html
-          echo "Cleanup complete. Current directory status:"
-          ls -la
-          echo "Built index.html content:"
-          cat index.html
+          mkdir -p ../staging/oshitaku-app
+          cp -r dist/* ../staging/oshitaku-app/
+          cd ..
+          
+          echo "Building and Staging Dashboard App..."
+          cd dashboard
+          npm install
+          npm run build
+          mkdir -p ../staging/dashboard
+          cp -r dist/* ../staging/dashboard/
+          cd ..
+          
+          echo "Staging complete. Staging folder contents:"
+          ls -R staging
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -59,11 +70,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
-          # Optional: exclude node_modules from artifact to keep it small
-          # (though they are in subfolders and upload-pages-artifact usually follows .gitignore or is selective)
+          path: 'staging'
 
-          
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
