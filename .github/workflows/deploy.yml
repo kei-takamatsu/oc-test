@@ -32,32 +32,42 @@ jobs:
 
       - name: Build and Stage All Projects
         run: |
+          set -ex
           mkdir -p staging
           
-          echo "Staging root index.html..."
+          echo "Staging root..."
+          ls -F
           cp index.html staging/
           
-          echo "Staging clock-sample..."
-          cp -r clock-sample staging/
+          if [ -d "clock-sample" ]; then
+            echo "Staging clock-sample..."
+            cp -r clock-sample staging/
+          fi
           
           echo "Building and Staging Oshitaku App..."
           cd oshitaku-app
+          ls -F
           npm install
           npm run build
+          ls -F
           mkdir -p ../staging/oshitaku-app
-          cp -r dist/* ../staging/oshitaku-app/
+          cp -rv dist/* ../staging/oshitaku-app/
           cd ..
           
-          echo "Building and Staging Dashboard App..."
-          cd dashboard
-          npm install
-          npm run build
-          mkdir -p ../staging/dashboard
-          cp -r dist/* ../staging/dashboard/
-          cd ..
+          if [ -d "dashboard" ]; then
+            echo "Building and Staging Dashboard App..."
+            cd dashboard
+            ls -F
+            npm install
+            npm run build
+            ls -F
+            mkdir -p ../staging/dashboard
+            cp -rv dist/* ../staging/dashboard/
+            cd ..
+          fi
           
-          echo "Staging complete. Staging folder contents:"
-          ls -R staging
+          echo "Staging complete. Staging folder structure:"
+          find staging -maxdepth 2
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
