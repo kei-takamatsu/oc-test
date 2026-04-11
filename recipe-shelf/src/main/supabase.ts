@@ -11,28 +11,14 @@ const supabaseUrl = process.env.SUPABASE_URL || 'https://dehievtwhwvxcqwyouhy.su
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlaGlldnR3aHd2eGNxd3lvdWh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjUxNzQsImV4cCI6MjA5MTUwMTE3NH0.j-pLzU_6oFfDukNLJKMDtBRqI8WUu7mMbQLDqQiZ9MA'
 
 const customStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    try {
-      const val = dbService.getSetting(key)
-      return val ? val : null
-    } catch (e) {
-      console.error('customStorage getItem error:', e)
-      return null
-    }
+  getItem: (key: string) => {
+    return dbService.getSetting(key) || null
   },
-  setItem: async (key: string, value: string): Promise<void> => {
-    try {
-      dbService.setSetting(key, value)
-    } catch (e) {
-      console.error('customStorage setItem error:', e)
-    }
+  setItem: (key: string, value: string) => {
+    dbService.setSetting(key, value)
   },
-  removeItem: async (key: string): Promise<void> => {
-    try {
-      dbService.deleteSetting(key)
-    } catch (e) {
-      console.error('customStorage removeItem error:', e)
-    }
+  removeItem: (key: string) => {
+    dbService.deleteSetting(key)
   }
 }
 
@@ -40,7 +26,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
     storageKey: 'recipe-shelf-auth',
     storage: customStorage
   }
@@ -63,8 +48,30 @@ export const authService = {
     if (error) throw error
   },
   getSession: async () => {
+    // まずストレージから復元されたセッションを取得
     const { data: { session } } = await supabase.auth.getSession()
-    return session
+
+    if (session) {
+      // アクセストークンの有効期限を確認し、切れていたらリフレッシュ
+      const expiresAt = session.expires_at // UNIX timestamp (seconds)
+      const now = Math.floor(Date.now() / 1000)
+      if (expiresAt && now >= expiresAt - 60) {
+        // 期限切れ or 1分以内に切れる → リフレッシュ
+        console.log('[Auth] Access token expired, refreshing...')
+        const { data, error } = await supabase.auth.refreshSession({
+          refresh_token: session.refresh_token
+        })
+        if (error) {
+          console.error('[Auth] Refresh failed:', error.message)
+          return null // リフレッシュ失敗 = 再ログインを促す
+        }
+        console.log('[Auth] Session refreshed successfully')
+        return data.session
+      }
+      return session
+    }
+
+    return null
   }
 }
 
