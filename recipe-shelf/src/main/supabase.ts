@@ -11,14 +11,28 @@ const supabaseUrl = process.env.SUPABASE_URL || 'https://dehievtwhwvxcqwyouhy.su
 const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlaGlldnR3aHd2eGNxd3lvdWh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjUxNzQsImV4cCI6MjA5MTUwMTE3NH0.j-pLzU_6oFfDukNLJKMDtBRqI8WUu7mMbQLDqQiZ9MA'
 
 const customStorage = {
-  getItem: (key: string) => {
-    return dbService.getSetting(key) || null
+  getItem: async (key: string): Promise<string | null> => {
+    try {
+      const val = dbService.getSetting(key)
+      return val ? val : null
+    } catch (e) {
+      console.error('customStorage getItem error:', e)
+      return null
+    }
   },
-  setItem: (key: string, value: string) => {
-    dbService.setSetting(key, value)
+  setItem: async (key: string, value: string): Promise<void> => {
+    try {
+      dbService.setSetting(key, value)
+    } catch (e) {
+      console.error('customStorage setItem error:', e)
+    }
   },
-  removeItem: (key: string) => {
-    dbService.deleteSetting(key)
+  removeItem: async (key: string): Promise<void> => {
+    try {
+      dbService.deleteSetting(key)
+    } catch (e) {
+      console.error('customStorage removeItem error:', e)
+    }
   }
 }
 
@@ -26,6 +40,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: false,
     storageKey: 'recipe-shelf-auth',
     storage: customStorage
   }
