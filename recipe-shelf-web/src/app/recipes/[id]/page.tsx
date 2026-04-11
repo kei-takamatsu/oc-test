@@ -98,8 +98,14 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
             <ul className="space-y-3">
               {ingredients.map((item: any, i: number) => (
                 <li key={i} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 px-2 rounded transition-colors">
-                  <span className="text-gray-800">{item.name}</span>
-                  <span className="font-medium text-gray-600">{item.amount}</span>
+                  {typeof item === 'object' && item !== null ? (
+                    <>
+                      <span className="text-gray-800">{item.name}</span>
+                      <span className="font-medium text-gray-600">{item.amount}</span>
+                    </>
+                  ) : (
+                    <span className="text-gray-800">{item}</span>
+                  )}
                 </li>
               ))}
             </ul>
