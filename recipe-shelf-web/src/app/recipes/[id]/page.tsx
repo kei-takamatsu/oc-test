@@ -3,15 +3,19 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Clock, Users, Link as LinkIcon, ChefHat } from 'lucide-react'
 
-export default async function RecipeDetailPage({ params }: { params: { id: string } }) {
+export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
   const supabase = await createClient()
 
-  // params.id -> await for Next.js 15+ if needed, but in standard setup this is fine
-  const { data: recipe } = await supabase
+  const { data: recipe, error } = await supabase
     .from('recipes')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', resolvedParams.id)
     .single()
+    
+  if (error) {
+    console.error('Fetch recipe error:', error)
+  }
 
   if (!recipe) {
     notFound()
