@@ -439,12 +439,19 @@ async function extractWithBrowserWindow(url2, apiKey) {
             const timer = setInterval(() => {
               attempts++;
               
+              // 少しずつスクロールして遅延読み込みを促す
+              window.scrollBy(0, 500);
+
               // 続きを読むボタンがあれば随時押す (FacebookやTwitter等の「もっと見る」にも対応)
               const btns = Array.from(document.querySelectorAll('span, div, button, a'));
               for (const btn of btns) {
                 const t = btn.textContent ? btn.textContent.trim() : '';
-                if (t === '続きを読む' || t === 'more' || t === '続きを見る' || t === 'もっと見る' || t === 'See more') {
-                  btn.click();
+                if (!t || t.length > 20) continue; // テキストが長すぎる要素は無視
+                
+                const matchKeywords = ['続きを読む', 'more', '続きを見る', 'もっと見る', 'see more', 'さらに表示', '...more', '… さらに表示'];
+                const isMatch = matchKeywords.some(kw => t.toLowerCase().includes(kw));
+                if (isMatch) {
+                  try { btn.click(); } catch (e) {}
                 }
               }
 
@@ -452,6 +459,7 @@ async function extractWithBrowserWindow(url2, apiKey) {
               const textLength = document.body.innerText.length;
               if (textLength > 150 || attempts > 20) {
                 clearInterval(timer);
+                window.scrollTo(0, 0); // 最後に一番上に戻しておく
                 resolve(true);
               }
             }, 500);
@@ -473,24 +481,30 @@ async function extractWithBrowserWindow(url2, apiKey) {
 
             // 画像のフォールバック (OGPが無い場合、ページ内で「最も面積が大きい」画像を探す)
             let imgUrl = document.querySelector('meta[property="og:image"]')?.content || '';
-            if (!imgUrl || imgUrl.includes('facebook.com/images')) {
-                const imgs = Array.from(document.querySelectorAll('img'));
-                let maxArea = 0;
-                let bestSrc = '';
-                
-                for(const img of imgs) {
-                    const w = img.clientWidth || img.width || 0;
-                    const h = img.clientHeight || img.height || 0;
-                    const area = Number(w) * Number(h);
+            if (!imgUrl || imgUrl.includes('facebook.com/images') || imgUrl.includes('fbcdn.net/images')) {
+                // Videoのポスター画像があれば優先的に取得
+                const videoWithPoster = document.querySelector('video[poster]');
+                if (videoWithPoster && videoWithPoster.getAttribute('poster')) {
+                    imgUrl = videoWithPoster.getAttribute('poster') || '';
+                } else {
+                    const imgs = Array.from(document.querySelectorAll('img'));
+                    let maxArea = 0;
+                    let bestSrc = '';
                     
-                    if (area > maxArea && img.src && !img.src.startsWith('data:')) {
-                        maxArea = area;
-                        bestSrc = img.src;
+                    for(const img of imgs) {
+                        const w = img.clientWidth || img.width || 0;
+                        const h = img.clientHeight || img.height || 0;
+                        const area = Number(w) * Number(h);
+                        
+                        if (area > maxArea && img.src && !img.src.startsWith('data:')) {
+                            maxArea = area;
+                            bestSrc = img.src;
+                        }
                     }
-                }
-                
-                if (bestSrc) {
-                    imgUrl = bestSrc;
+                    
+                    if (bestSrc) {
+                        imgUrl = bestSrc;
+                    }
                 }
             }
 
