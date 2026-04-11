@@ -108,6 +108,10 @@ export const dbService = {
       INSERT INTO settings (key, value) VALUES (?, ?)
       ON CONFLICT(key) DO UPDATE SET value = excluded.value
     `).run(key, value)
+  },
+
+  deleteSetting: (key: string): void => {
+    db.prepare('DELETE FROM settings WHERE key = ?').run(key)
   }
 }
 

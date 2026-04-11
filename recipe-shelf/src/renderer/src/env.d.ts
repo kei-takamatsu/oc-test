@@ -27,5 +27,10 @@ interface Window {
     saveSetting: (key: string, value: string) => Promise<void>
     addRecipeFromText: (text: string, dataUrl?: string) => Promise<Recipe>
     openLoginWindow: (url: string) => Promise<void>
+    supaLogin: (email: string, pw: string) => Promise<any>
+    supaSignup: (email: string, pw: string) => Promise<any>
+    supaLogout: () => Promise<void>
+    supaGetSession: () => Promise<any>
+    migrateRecipes: () => Promise<number | false>
   }
 }

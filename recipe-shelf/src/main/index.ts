@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, protocol, net } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { dbService, imagesPath, Recipe } from './db'
+import { cloudDbService } from './cloudDb'
+import { authService, storageService } from './supabase'
 import { scraperService } from './scraper'
 import { aiService } from './ai'
 import { pathToFileURL } from 'url'
@@ -60,9 +62,43 @@ app.whenReady().then(() => {
   })
 
   // IPC Handlers
-  ipcMain.handle('get-all-recipes', () => dbService.getAllRecipes())
+  ipcMain.handle('get-all-recipes', () => cloudDbService.getAllRecipes())
   
-  ipcMain.handle('get-recipe', (_, id: number) => dbService.getRecipeById(id))
+  ipcMain.handle('get-recipe', (_, id: number) => cloudDbService.getRecipeById(id))
+
+  // Supabase Auth Handlers
+  ipcMain.handle('supa-login', (_, email, pw) => authService.signIn(email, pw))
+  ipcMain.handle('supa-signup', (_, email, pw) => authService.signUp(email, pw))
+  ipcMain.handle('supa-logout', () => authService.signOut())
+  ipcMain.handle('supa-get-session', () => authService.getSession())
+  
+  // Migration Task (Local to Cloud)
+  ipcMain.handle('migrate-recipes', async () => {
+    const session = await authService.getSession()
+    if (!session) return false
+    
+    const localRecipes = dbService.getAllRecipes()
+    let migratedCount = 0
+    for (const r of localRecipes) {
+      if (r.title.includes('(Migrated)')) continue
+      try {
+        let newImageLocalPath = r.imageLocalPath
+        // upload local images to storage
+        if (r.imageLocalPath && !r.imageLocalPath.startsWith('http')) {
+          const localPath = join(imagesPath, r.imageLocalPath)
+          const publicUrl = await storageService.uploadImage(localPath, r.imageLocalPath)
+          newImageLocalPath = publicUrl
+        }
+        await cloudDbService.addRecipe({ ...r, imageLocalPath: newImageLocalPath })
+        // mark local as migrated to prevent duplicate migrations
+        dbService.updateRecipe(r.id!, { title: r.title + ' (Migrated)' })
+        migratedCount++
+      } catch (e) {
+        console.error('Migration failed for recipe', r.id, e)
+      }
+    }
+    return migratedCount
+  })
   
   let loginWindow: BrowserWindow | null = null
   ipcMain.handle('open-login-window', (_, url: string) => {
@@ -110,24 +146,28 @@ app.whenReady().then(() => {
     }
     if (scrapedData.imageUrl) {
       const fileName = await scraperService.downloadImage(scrapedData.imageUrl)
-      scrapedData.imageLocalPath = fileName
+      if (fileName) {
+        const localPath = join(imagesPath, fileName)
+        const publicUrl = await storageService.uploadImage(localPath, fileName)
+        scrapedData.imageLocalPath = publicUrl
+      }
     }
-    const id = dbService.addRecipe(scrapedData as Recipe)
-    return dbService.getRecipeById(Number(id))
+    const id = await cloudDbService.addRecipe(scrapedData as Recipe)
+    return cloudDbService.getRecipeById(Number(id))
   })
 
   ipcMain.handle('add-recipe-manual', async (_, recipe: Recipe) => {
-    const id = dbService.addRecipe(recipe)
-    return dbService.getRecipeById(Number(id))
+    const id = await cloudDbService.addRecipe(recipe)
+    return cloudDbService.getRecipeById(Number(id))
   })
 
-  ipcMain.handle('update-recipe', (_, id: number, recipe: Partial<Recipe>) => {
-    dbService.updateRecipe(id, recipe)
-    return dbService.getRecipeById(id)
+  ipcMain.handle('update-recipe', async (_, id: number, recipe: Partial<Recipe>) => {
+    await cloudDbService.updateRecipe(id, recipe)
+    return cloudDbService.getRecipeById(id)
   })
 
-  ipcMain.handle('delete-recipe', (_, id: number) => {
-    dbService.deleteRecipe(id)
+  ipcMain.handle('delete-recipe', async (_, id: number) => {
+    await cloudDbService.deleteRecipe(id)
   })
 
   ipcMain.handle('get-setting', (_, key: string) => {
@@ -155,15 +195,16 @@ app.whenReady().then(() => {
           const localPath = join(imagesPath, fileName)
           const buffer = Buffer.from(matches[2], 'base64')
           writeFileSync(localPath, buffer)
-          recipeData.imageLocalPath = fileName
+          const publicUrl = await storageService.uploadImage(localPath, fileName)
+          recipeData.imageLocalPath = publicUrl
         }
       } catch (err) {
         console.error('Failed to save base64 image', err)
       }
     }
 
-    const id = dbService.addRecipe(recipeData as Recipe)
-    return dbService.getRecipeById(Number(id))
+    const id = await cloudDbService.addRecipe(recipeData as Recipe)
+    return cloudDbService.getRecipeById(Number(id))
   })
 
   createWindow()

@@ -11,7 +11,12 @@ const api = {
   getSetting: (key: string) => electronAPI.ipcRenderer.invoke('get-setting', key),
   saveSetting: (key: string, value: string) => electronAPI.ipcRenderer.invoke('save-setting', key, value),
   addRecipeFromText: (text: string, dataUrl?: string) => electronAPI.ipcRenderer.invoke('add-recipe-from-text', text, dataUrl),
-  openLoginWindow: (url: string) => electronAPI.ipcRenderer.invoke('open-login-window', url)
+  openLoginWindow: (url: string) => electronAPI.ipcRenderer.invoke('open-login-window', url),
+  supaLogin: (email: string, pw: string) => electronAPI.ipcRenderer.invoke('supa-login', email, pw),
+  supaSignup: (email: string, pw: string) => electronAPI.ipcRenderer.invoke('supa-signup', email, pw),
+  supaLogout: () => electronAPI.ipcRenderer.invoke('supa-logout'),
+  supaGetSession: () => electronAPI.ipcRenderer.invoke('supa-get-session'),
+  migrateRecipes: () => electronAPI.ipcRenderer.invoke('migrate-recipes')
 }
 
 if (process.contextIsolated) {

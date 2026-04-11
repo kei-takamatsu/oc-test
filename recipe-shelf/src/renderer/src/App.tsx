@@ -15,11 +15,17 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function App() {
+  const [session, setSession] = useState<any>(null)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
+
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null)
   const [view, setView] = useState<'shelf' | 'detail' | 'settings'>('shelf')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  
+
   // Add Recipe State
   const [addTab, setAddTab] = useState<'url' | 'text'>('url')
   const [importUrl, setImportUrl] = useState('')
@@ -31,9 +37,62 @@ export default function App() {
   const [apiKey, setApiKey] = useState('')
 
   useEffect(() => {
-    loadRecipes()
-    loadSettings()
+    const init = async () => {
+      const s = await window.api.supaGetSession()
+      setSession(s)
+      if (s) {
+        window.api.migrateRecipes().then(count => {
+          if (count && count > 0) {
+            alert(`${count}件のローカルレシピをクラウドに移行しました！`)
+            loadRecipes()
+          }
+        })
+        loadRecipes()
+      }
+      setAuthLoading(false)
+      loadSettings()
+    }
+    init()
   }, [])
+
+  const handleAuth = async () => {
+    try {
+      setAuthLoading(true)
+      let data
+      if (authMode === 'login') {
+        data = await window.api.supaLogin(email, password)
+      } else {
+        data = await window.api.supaSignup(email, password)
+        alert('登録が完了しました。一度ログインをお試しください。')
+      }
+      
+      if (data?.session) {
+        setSession(data.session)
+        window.api.migrateRecipes().then(count => {
+          if (count && count > 0) alert(`${count}件のレシピをクラウドへ移行しました！`)
+          loadRecipes()
+        })
+        loadRecipes()
+      }
+    } catch (error: any) {
+      alert('認証エラー: ' + error.message)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await window.api.supaLogout()
+    setSession(null)
+    setRecipes([])
+  }
+
+  const getImageUrl = (path?: string) => {
+    if (!path) return 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80';
+    if (path.startsWith('http')) return path;
+    return `recipe-image://${path}`;
+  }
+
 
   const loadSettings = async () => {
     const savedKey = await window.api.getSetting('gemini_api_key')
@@ -118,6 +177,45 @@ export default function App() {
     setView('detail')
   }
 
+  if (authLoading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+      <Loader2 className="loading-spinner" size={48} />
+    </div>
+  }
+
+  if (!session) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+        <div style={{ background: 'var(--bg-secondary)', padding: '40px', borderRadius: '16px', width: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+             <ChefHat size={48} color="#f39c12" style={{ marginBottom: '10px' }} />
+             <h2>RecipeShelf</h2>
+             <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>クラウドへレシピを保存しましょう</p>
+          </div>
+          
+          <div className="input-group">
+            <label className="input-label">メールアドレス</label>
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="input-field" placeholder="example@email.com" />
+          </div>
+          <div className="input-group">
+            <label className="input-label">パスワード</label>
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="input-field" placeholder="••••••••" />
+          </div>
+          
+          <button className="btn btn-primary" style={{ width: '100%', marginTop: '20px', justifyContent: 'center' }} onClick={handleAuth}>
+             {authMode === 'login' ? 'ログイン' : '新規登録'}
+          </button>
+          
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <span style={{ color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem', textDecoration: 'underline' }} onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>
+              {authMode === 'login' ? 'アカウントをお持ちでない方は新規登録' : '既にアカウントをお持ちの方はログイン'}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="sidebar">
@@ -159,7 +257,7 @@ export default function App() {
                   <div key={recipe.id} className="recipe-card" onClick={() => openRecipe(recipe)}>
                     <img 
                       className="recipe-card-image" 
-                      src={recipe.imageLocalPath ? `recipe-image://${recipe.imageLocalPath}` : 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80'} 
+                      src={getImageUrl(recipe.imageLocalPath)} 
                       alt={recipe.title} 
                     />
                     <div className="recipe-card-content">
@@ -189,6 +287,9 @@ export default function App() {
             >
                <div className="header">
                 <h1>設定</h1>
+                <button className="btn" style={{ background: 'transparent', color: 'var(--text-secondary)' }} onClick={handleLogout}>
+                  ログアウト
+                </button>
               </div>
 
               <div className="recipe-section" style={{ maxWidth: '600px' }}>
@@ -265,7 +366,7 @@ export default function App() {
               <div className="recipe-detail-header">
                 <img 
                   className="recipe-detail-image" 
-                  src={selectedRecipe?.imageLocalPath ? `recipe-image://${selectedRecipe.imageLocalPath}` : 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=800&q=80'} 
+                  src={getImageUrl(selectedRecipe?.imageLocalPath)} 
                   alt={selectedRecipe?.title} 
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

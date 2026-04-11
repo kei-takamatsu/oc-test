@@ -4,6 +4,8 @@ const path = require("path");
 const utils = require("@electron-toolkit/utils");
 const Database = require("better-sqlite3");
 const fs = require("fs");
+const supabaseJs = require("@supabase/supabase-js");
+const dotenv = require("dotenv");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const uuid = require("uuid");
@@ -25,6 +27,7 @@ function _interopNamespaceDefault(e) {
   n.default = e;
   return Object.freeze(n);
 }
+const dotenv__namespace = /* @__PURE__ */ _interopNamespaceDefault(dotenv);
 const cheerio__namespace = /* @__PURE__ */ _interopNamespaceDefault(cheerio);
 const userDataPath = electron.app.getPath("userData");
 const dbPath = path.join(userDataPath, "recipes.sqlite");
@@ -101,6 +104,140 @@ const dbService = {
       INSERT INTO settings (key, value) VALUES (?, ?)
       ON CONFLICT(key) DO UPDATE SET value = excluded.value
     `).run(key, value);
+  },
+  deleteSetting: (key) => {
+    db.prepare("DELETE FROM settings WHERE key = ?").run(key);
+  }
+};
+dotenv__namespace.config({ path: path.join(electron.app.getAppPath(), "../../.env") });
+const supabaseUrl = process.env.SUPABASE_URL || "https://dehievtwhwvxcqwyouhy.supabase.co";
+const supabaseKey = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlaGlldnR3aHd2eGNxd3lvdWh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjUxNzQsImV4cCI6MjA5MTUwMTE3NH0.j-pLzU_6oFfDukNLJKMDtBRqI8WUu7mMbQLDqQiZ9MA";
+const customStorage = {
+  getItem: (key) => {
+    return dbService.getSetting(key) || null;
+  },
+  setItem: (key, value) => {
+    dbService.setSetting(key, value);
+  },
+  removeItem: (key) => {
+    dbService.deleteSetting(key);
+  }
+};
+const supabase = supabaseJs.createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: "recipe-shelf-auth",
+    storage: customStorage
+  }
+});
+const authService = {
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
+  },
+  signUp: async (email, password) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
+  },
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
+  getSession: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  }
+};
+const storageService = {
+  uploadImage: async (localFilePath, filename) => {
+    const buffer = fs.readFileSync(localFilePath);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Must be logged in to upload images");
+    const filePath = `${session.user.id}/${filename}`;
+    const { error } = await supabase.storage.from("recipe-images").upload(filePath, buffer, {
+      contentType: "image/jpeg",
+      upsert: true
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from("recipe-images").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+};
+function toCamel(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    sourceUrl: row.source_url,
+    imageUrl: row.image_url,
+    imageLocalPath: row.image_local_path,
+    ingredients: typeof row.ingredients === "string" ? row.ingredients : JSON.stringify(row.ingredients || []),
+    instructions: typeof row.instructions === "string" ? row.instructions : JSON.stringify(row.instructions || []),
+    description: row.description,
+    prepTime: row.prep_time,
+    cookTime: row.cook_time,
+    servings: row.servings,
+    rating: row.rating,
+    notes: row.notes,
+    createdAt: row.created_at
+  };
+}
+function toSnake(recipe, userId) {
+  return {
+    user_id: userId,
+    title: recipe.title,
+    source_url: recipe.sourceUrl,
+    image_url: recipe.imageUrl,
+    image_local_path: recipe.imageLocalPath,
+    ingredients: recipe.ingredients ? JSON.parse(recipe.ingredients) : [],
+    instructions: recipe.instructions ? JSON.parse(recipe.instructions) : [],
+    description: recipe.description,
+    prep_time: recipe.prepTime,
+    cook_time: recipe.cookTime,
+    servings: recipe.servings,
+    rating: recipe.rating || 0,
+    notes: recipe.notes
+  };
+}
+const cloudDbService = {
+  getAllRecipes: async () => {
+    const { data, error } = await supabase.from("recipes").select("*").order("created_at", { ascending: false });
+    if (error) {
+      console.error("Failed to fetch recipes from Supabase:", error);
+      return [];
+    }
+    return (data || []).map(toCamel);
+  },
+  getRecipeById: async (id) => {
+    const { data, error } = await supabase.from("recipes").select("*").eq("id", id).single();
+    if (error || !data) return void 0;
+    return toCamel(data);
+  },
+  addRecipe: async (recipe) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("You must be logged in to add a recipe.");
+    const insertData = toSnake(recipe, session.user.id);
+    const { data, error } = await supabase.from("recipes").insert(insertData).select("id").single();
+    if (error) {
+      console.error("Failed to insert recipe:", error);
+      throw new Error(error.message);
+    }
+    return data?.id;
+  },
+  updateRecipe: async (id, recipe) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Not authenticated");
+    const updateData = toSnake(recipe, session.user.id);
+    delete updateData.user_id;
+    delete updateData.id;
+    const { error } = await supabase.from("recipes").update(updateData).eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+  deleteRecipe: async (id) => {
+    const { error } = await supabase.from("recipes").delete().eq("id", id);
+    if (error) throw new Error(error.message);
   }
 };
 const scraperService = {
@@ -325,8 +462,35 @@ electron.app.whenReady().then(() => {
   electron.app.on("browser-window-created", (_, window) => {
     utils.optimizer.watchWindowShortcuts(window);
   });
-  electron.ipcMain.handle("get-all-recipes", () => dbService.getAllRecipes());
-  electron.ipcMain.handle("get-recipe", (_, id) => dbService.getRecipeById(id));
+  electron.ipcMain.handle("get-all-recipes", () => cloudDbService.getAllRecipes());
+  electron.ipcMain.handle("get-recipe", (_, id) => cloudDbService.getRecipeById(id));
+  electron.ipcMain.handle("supa-login", (_, email, pw) => authService.signIn(email, pw));
+  electron.ipcMain.handle("supa-signup", (_, email, pw) => authService.signUp(email, pw));
+  electron.ipcMain.handle("supa-logout", () => authService.signOut());
+  electron.ipcMain.handle("supa-get-session", () => authService.getSession());
+  electron.ipcMain.handle("migrate-recipes", async () => {
+    const session = await authService.getSession();
+    if (!session) return false;
+    const localRecipes = dbService.getAllRecipes();
+    let migratedCount = 0;
+    for (const r of localRecipes) {
+      if (r.title.includes("(Migrated)")) continue;
+      try {
+        let newImageLocalPath = r.imageLocalPath;
+        if (r.imageLocalPath && !r.imageLocalPath.startsWith("http")) {
+          const localPath = path.join(imagesPath, r.imageLocalPath);
+          const publicUrl = await storageService.uploadImage(localPath, r.imageLocalPath);
+          newImageLocalPath = publicUrl;
+        }
+        await cloudDbService.addRecipe({ ...r, imageLocalPath: newImageLocalPath });
+        dbService.updateRecipe(r.id, { title: r.title + " (Migrated)" });
+        migratedCount++;
+      } catch (e) {
+        console.error("Migration failed for recipe", r.id, e);
+      }
+    }
+    return migratedCount;
+  });
   let loginWindow = null;
   electron.ipcMain.handle("open-login-window", (_, url2) => {
     if (loginWindow) {
@@ -358,21 +522,25 @@ electron.app.whenReady().then(() => {
     }
     if (scrapedData.imageUrl) {
       const fileName = await scraperService.downloadImage(scrapedData.imageUrl);
-      scrapedData.imageLocalPath = fileName;
+      if (fileName) {
+        const localPath = path.join(imagesPath, fileName);
+        const publicUrl = await storageService.uploadImage(localPath, fileName);
+        scrapedData.imageLocalPath = publicUrl;
+      }
     }
-    const id = dbService.addRecipe(scrapedData);
-    return dbService.getRecipeById(Number(id));
+    const id = await cloudDbService.addRecipe(scrapedData);
+    return cloudDbService.getRecipeById(Number(id));
   });
   electron.ipcMain.handle("add-recipe-manual", async (_, recipe) => {
-    const id = dbService.addRecipe(recipe);
-    return dbService.getRecipeById(Number(id));
+    const id = await cloudDbService.addRecipe(recipe);
+    return cloudDbService.getRecipeById(Number(id));
   });
-  electron.ipcMain.handle("update-recipe", (_, id, recipe) => {
-    dbService.updateRecipe(id, recipe);
-    return dbService.getRecipeById(id);
+  electron.ipcMain.handle("update-recipe", async (_, id, recipe) => {
+    await cloudDbService.updateRecipe(id, recipe);
+    return cloudDbService.getRecipeById(id);
   });
-  electron.ipcMain.handle("delete-recipe", (_, id) => {
-    dbService.deleteRecipe(id);
+  electron.ipcMain.handle("delete-recipe", async (_, id) => {
+    await cloudDbService.deleteRecipe(id);
   });
   electron.ipcMain.handle("get-setting", (_, key) => {
     return dbService.getSetting(key);
@@ -393,14 +561,15 @@ electron.app.whenReady().then(() => {
           const localPath = path.join(imagesPath, fileName);
           const buffer = Buffer.from(matches[2], "base64");
           fs.writeFileSync(localPath, buffer);
-          recipeData.imageLocalPath = fileName;
+          const publicUrl = await storageService.uploadImage(localPath, fileName);
+          recipeData.imageLocalPath = publicUrl;
         }
       } catch (err) {
         console.error("Failed to save base64 image", err);
       }
     }
-    const id = dbService.addRecipe(recipeData);
-    return dbService.getRecipeById(Number(id));
+    const id = await cloudDbService.addRecipe(recipeData);
+    return cloudDbService.getRecipeById(Number(id));
   });
   createWindow();
   electron.app.on("activate", function() {
