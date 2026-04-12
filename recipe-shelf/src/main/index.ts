@@ -213,6 +213,67 @@ app.whenReady().then(() => {
 
   createWindow()
 
+  // Background Scraper Queue for pending URLs from Web App
+  async function processPendingScrapeQueue() {
+    try {
+      const session = await authService.getSession()
+      if (!session) return // Not logged in
+
+      // Fetch pending recipes
+      const { data: pendings, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('notes', '[PENDING_SCRAPE]')
+        .eq('user_id', session.user.id)
+        .limit(1)
+
+      if (error) throw error
+
+      if (pendings && pendings.length > 0) {
+        const target = pendings[0]
+        console.log('[Background Scraper] Processing pending URL:', target.source_url)
+        
+        try {
+          // Gemini API Check
+          const apiKey = dbService.getSetting('gemini_api_key')
+          if (!apiKey) throw new Error('API Key is not configured for SNS extraction')
+            
+          const scrapedData = await extractWithBrowserWindow(target.source_url, apiKey)
+          
+          // Image upload process
+          if (scrapedData.imageUrl) {
+             const fileName = await scraperService.downloadImage(scrapedData.imageUrl)
+             if (fileName) {
+               const localPath = join(imagesPath, fileName)
+               const publicUrl = await storageService.uploadImage(localPath, fileName)
+               scrapedData.imageLocalPath = publicUrl
+             }
+          }
+          
+          // Clear pending marker
+          scrapedData.notes = null
+          await cloudDbService.updateRecipe(target.id, scrapedData as any)
+          console.log('[Background Scraper] Successfully processed URL:', target.source_url)
+          
+        } catch (err) {
+          console.error('[Background Scraper] Failed:', err)
+          await cloudDbService.updateRecipe(target.id, { 
+            title: '❌ 取得失敗', 
+            description: `自動スクレイピングに失敗しました: ${err instanceof Error ? err.message : String(err)}\nPCアプリから手動で追加を試してください。`,
+            notes: null // clear marker to break loop
+          } as any)
+        }
+      }
+    } catch (e) {
+      console.error('[Background Scraper] Queue watcher error:', e)
+    }
+  }
+
+  // Run immediately, then check every 15 seconds
+  setTimeout(processPendingScrapeQueue, 2000)
+  setInterval(processPendingScrapeQueue, 15000)
+
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

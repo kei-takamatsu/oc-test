@@ -56,5 +56,42 @@ export async function addRecipe(formData: FormData) {
   }
 
   revalidatePath('/recipes')
+  revalidatePath('/recipes')
+  redirect('/recipes')
+}
+
+export async function addRecipeFromUrl(formData: FormData) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/?error=You must be logged in')
+  }
+
+  const url = formData.get('url') as string
+  if (!url) return
+
+  // スマホから登録されたURLを「保留状態」としてPCに拾わせるためのレコード
+  const recipeData = {
+    user_id: user.id,
+    title: '🌐自動取得を待機中...',
+    source_url: url,
+    description: 'PCアプリを起動すると、裏側で自動的にレシピ内容と画像が抽出されます！',
+    notes: '[PENDING_SCRAPE]', // <- PENDING FLag
+    image_local_path: null,
+    ingredients: JSON.stringify(['(自動取得されます)']),
+    instructions: JSON.stringify(['(自動取得されます)'])
+  }
+
+  const { error } = await supabase
+    .from('recipes')
+    .insert(recipeData)
+
+  if (error) {
+    console.error('Error adding pending url recipe:', error)
+    redirect('/recipes/new?error=URLの登録に失敗しました')
+  }
+
+  revalidatePath('/recipes')
   redirect('/recipes')
 }

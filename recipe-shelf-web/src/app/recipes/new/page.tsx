@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
-import { addRecipe } from './actions'
+import { addRecipe, addRecipeFromUrl } from './actions'
 
 export default async function NewRecipePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const resolvedParams = await searchParams;
@@ -22,6 +22,44 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
           </div>
         )}
 
+        {/* URL Quick Add Form */}
+        <form action={addRecipeFromUrl} className="bg-orange-50 p-6 rounded-2xl shadow-sm border border-orange-100 mb-8 space-y-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            {/* decoration */}
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+          </div>
+          <div className="relative z-10">
+            <h2 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
+              🌐 URLから自動解析（PC連携）
+            </h2>
+            <p className="text-sm text-orange-800 mb-4">
+              レシピのURLを入力すると、あとでPCアプリを開いたときに自動でスクレイピングしてレシピが完成します！外出先でのブックマークに最適です。
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="url"
+                name="url"
+                required
+                placeholder="https://..."
+                className="flex-1 px-4 py-3 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+              />
+              <button
+                type="submit"
+                className="whitespace-nowrap px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-sm transition-colors"
+              >
+                あとで解析する
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <div className="flex items-center gap-4 mb-8">
+          <div className="h-px bg-gray-200 flex-1"></div>
+          <span className="text-sm font-medium text-gray-400 uppercase tracking-widest">OR</span>
+          <div className="h-px bg-gray-200 flex-1"></div>
+        </div>
+
+        {/* Manual Form */}
         <form action={addRecipe} className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
             

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { LogOut, Clock } from 'lucide-react'
 import { logout } from '../login/actions'
 import SearchInput from './SearchInput'
+import SortableRecipeGrid from './SortableRecipeGrid'
 
 export default async function RecipesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const supabase = await createClient()
@@ -54,39 +55,8 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
       <main className="p-4 max-w-3xl mx-auto space-y-6 mt-4">
         <SearchInput />
 
-        {/* Recipe Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {recipes?.map((recipe) => (
-            <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group block">
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="aspect-square relative overflow-hidden bg-gray-100">
-                  <img
-                    src={recipe.image_local_path || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?auto=format&fit=crop&w=400&q=80'}
-                    alt={recipe.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="font-semibold text-gray-900 leading-tight line-clamp-2 text-sm">{recipe.title}</h3>
-                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                    {(recipe.prep_time || recipe.cook_time) && (
-                      <div className="flex items-center gap-1">
-                        <Clock size={12} />
-                        <span>{recipe.prep_time || recipe.cook_time}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-          {(!recipes || recipes.length === 0) && (
-            <div className="col-span-full py-12 text-center text-gray-500">
-              <p>レシピがありません。</p>
-              <p className="text-sm mt-1">PCアプリからレシピをスクレイピングして追加してください。</p>
-            </div>
-          )}
-        </div>
+        {/* Recipe Grid (Sortable) */}
+        <SortableRecipeGrid initialRecipes={recipes} />
       </main>
     </div>
   )
