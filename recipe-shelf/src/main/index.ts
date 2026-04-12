@@ -329,9 +329,8 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
                 }
               }
 
-              // テキスト量が一定以上（150文字以上）になるか、10秒経過したら完了
-              const textLength = document.body.innerText.length;
-              if (textLength > 150 || attempts > 20) {
+              // すぐに完了にせず、十分な時間（約8秒 = attempts 16回）スクロールとクリックを試行して隠れたテキストを展開させる
+              if (attempts >= 16) {
                 clearInterval(timer);
                 window.scrollTo(0, 0); // 最後に一番上に戻しておく
                 resolve(true);
