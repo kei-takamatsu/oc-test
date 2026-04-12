@@ -89,7 +89,8 @@ ${text}
 
     } catch (error) {
       console.error('Error extracting recipe with Gemini:', error)
-      throw new Error('Failed to extract recipe using AI.')
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error('AI解析エラー: ' + msg)
     }
   }
 }

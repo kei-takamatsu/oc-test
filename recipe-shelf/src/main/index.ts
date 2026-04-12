@@ -357,13 +357,8 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
             const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
             const ogDesc = document.querySelector('meta[property="og:description"]')?.content || '';
             
-            // DOMクローンを使って隠れたテキストも含めて全取得する
-            const clone = document.body.cloneNode(true);
-            const hiddenEls = clone.querySelectorAll('script, style, noscript, iframe, svg, path');
-            hiddenEls.forEach(el => el.remove());
-            
-            // textContent はCSSで隠された「さらに表示」の先の中身もすべて取得できる
-            let bodyText = clone.textContent ? clone.textContent.replace(/\\s+/g, ' ').trim() : document.body.innerText;
+            // 複雑なDOM構造に依存せず、画面上のすべての表示テキストを丸ごとGeminiに渡して判別させる
+            let bodyText = document.body.innerText;
             if (!bodyText || bodyText.length < 50) {
                bodyText = document.body.textContent || '';
             }
