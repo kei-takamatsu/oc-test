@@ -6,11 +6,19 @@ import { logout } from '../login/actions'
 export default async function RecipesPage() {
   const supabase = await createClient()
 
-  const { data: recipes } = await supabase
+  const { data: { user } } = await supabase.auth.getUser()
+  console.log('Current user:', user?.id)
+
+  const { data: recipes, error } = await supabase
     .from('recipes')
     .select('*')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Recipes fetch error:', error)
+  }
+  console.log('Fetched recipes count:', recipes?.length || 0)
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
