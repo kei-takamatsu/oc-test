@@ -451,7 +451,8 @@ ${text}
       };
     } catch (error) {
       console.error("Error extracting recipe with Gemini:", error);
-      throw new Error("Failed to extract recipe using AI.");
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error("AI解析エラー: " + msg);
     }
   }
 };
@@ -607,6 +608,47 @@ electron.app.whenReady().then(() => {
     return cloudDbService.getRecipeById(Number(id));
   });
   createWindow();
+  async function processPendingScrapeQueue() {
+    try {
+      const session = await authService.getSession();
+      if (!session) return;
+      const { data: pendings, error } = await supabase.from("recipes").select("*").eq("notes", "[PENDING_SCRAPE]").eq("user_id", session.user.id).limit(1);
+      if (error) throw error;
+      if (pendings && pendings.length > 0) {
+        const target = pendings[0];
+        console.log("[Background Scraper] Processing pending URL:", target.source_url);
+        try {
+          const apiKey = dbService.getSetting("gemini_api_key");
+          if (!apiKey) throw new Error("API Key is not configured for SNS extraction");
+          const scrapedData = await extractWithBrowserWindow(target.source_url, apiKey);
+          if (scrapedData.imageUrl) {
+            const fileName = await scraperService.downloadImage(scrapedData.imageUrl);
+            if (fileName) {
+              const localPath = path.join(imagesPath, fileName);
+              const publicUrl = await storageService.uploadImage(localPath, fileName);
+              scrapedData.imageLocalPath = publicUrl;
+            }
+          }
+          scrapedData.notes = null;
+          await cloudDbService.updateRecipe(target.id, scrapedData);
+          console.log("[Background Scraper] Successfully processed URL:", target.source_url);
+        } catch (err) {
+          console.error("[Background Scraper] Failed:", err);
+          await cloudDbService.updateRecipe(target.id, {
+            title: "❌ 取得失敗",
+            description: `自動スクレイピングに失敗しました: ${err instanceof Error ? err.message : String(err)}
+PCアプリから手動で追加を試してください。`,
+            notes: null
+            // clear marker to break loop
+          });
+        }
+      }
+    } catch (e) {
+      console.error("[Background Scraper] Queue watcher error:", e);
+    }
+  }
+  setTimeout(processPendingScrapeQueue, 2e3);
+  setInterval(processPendingScrapeQueue, 15e3);
   electron.app.on("activate", function() {
     if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -637,50 +679,78 @@ async function extractWithBrowserWindow(url2, apiKey) {
     hiddenWindow.webContents.on("did-finish-load", async () => {
       clearTimeout(timeout);
       try {
-        await hiddenWindow.webContents.executeJavaScript(`
-          return new Promise((resolve) => {
-            let attempts = 0;
-            const timer = setInterval(() => {
-              attempts++;
-              
-              // 少しずつスクロールして遅延読み込みを促す
-              window.scrollBy(0, 500);
-
-              // 続きを読むボタンがあれば随時押す (FacebookやTwitter等の「もっと見る」にも対応)
-              const btns = Array.from(document.querySelectorAll('span, div, button, a'));
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise((r) => setTimeout(r, 2e3));
+          await hiddenWindow.webContents.executeJavaScript("window.scrollBy(0, 500);").catch(() => {
+          });
+          const coords = await hiddenWindow.webContents.executeJavaScript(`
+            (() => {
+              const btns = Array.from(document.querySelectorAll('*'));
+              const targets = [];
               for (const btn of btns) {
+                if (btn.children.length > 2) continue; 
                 const t = btn.textContent ? btn.textContent.trim() : '';
-                if (!t || t.length > 20) continue; // テキストが長すぎる要素は無視
+                if (!t || t.length > 25) continue; 
                 
                 const matchKeywords = ['続きを読む', 'more', '続きを見る', 'もっと見る', 'see more', 'さらに表示', '...more', '… さらに表示'];
-                const isMatch = matchKeywords.some(kw => t.toLowerCase().includes(kw));
+                const isMatch = matchKeywords.some(kw => t.toLowerCase() === kw || t.toLowerCase() === 'さらに表示' || t.includes(kw));
+                
                 if (isMatch) {
-                  try { btn.click(); } catch (e) {}
+                  const rect = btn.getBoundingClientRect();
+                  if (rect.width > 0 && rect.height > 0) {
+                     targets.push({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+                  }
                 }
               }
-
-              // テキスト量が一定以上（150文字以上）になるか、10秒経過したら完了
-              const textLength = document.body.innerText.length;
-              if (textLength > 150 || attempts > 20) {
-                clearInterval(timer);
-                window.scrollTo(0, 0); // 最後に一番上に戻しておく
-                resolve(true);
-              }
-            }, 500);
-          });
-        `).catch(() => {
+              return targets;
+            })();
+          `).catch(() => []);
+          if (coords && coords.length > 0) {
+            for (const pos of coords) {
+              const x = Math.round(pos.x);
+              const y = Math.round(pos.y);
+              hiddenWindow.webContents.sendInputEvent({ type: "mouseMove", x, y });
+              hiddenWindow.webContents.sendInputEvent({ type: "mouseDown", x, y, button: "left", clickCount: 1 });
+              hiddenWindow.webContents.sendInputEvent({ type: "mouseUp", x, y, button: "left", clickCount: 1 });
+              await new Promise((r) => setTimeout(r, 300));
+            }
+          }
+        }
+        await hiddenWindow.webContents.executeJavaScript("window.scrollTo(0, 0);").catch(() => {
         });
-        await new Promise((r) => setTimeout(r, 1500));
+        await new Promise((r) => setTimeout(r, 1e3));
         const pageData = await hiddenWindow.webContents.executeJavaScript(`
           (() => {
             const title = document.title || '';
             const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
             const ogDesc = document.querySelector('meta[property="og:description"]')?.content || '';
             
-            // 複雑なDOM構造に依存せず、画面上のすべての表示テキストを丸ごとGeminiに渡して判別させる
-            let bodyText = document.body.innerText;
+            // CSS等で隠された全文も取得するための独自抽出関数
+            function extractReadableText(node) {
+              if (!node) return "";
+              const ignoreTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH', 'IFRAME', 'META', 'LINK'];
+              if (ignoreTags.includes(node.nodeName)) return "";
+              if (node.nodeType === 3) {
+                  return node.textContent || "";
+              }
+              
+              const isBlock = ['DIV', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BR', 'TR', 'ARTICLE', 'SECTION'].includes(node.nodeName);
+              let text = "";
+              
+              for (const child of node.childNodes) {
+                 text += extractReadableText(child);
+              }
+              
+              if (isBlock) text += "\\n";
+              return text;
+            }
+
+            let bodyText = extractReadableText(document.body);
+            // 余分な空行を圧縮する
+            bodyText = bodyText.replace(/\\n{3,}/g, '\\n\\n').trim();
+
             if (!bodyText || bodyText.length < 50) {
-               bodyText = document.body.textContent || '';
+               bodyText = document.body.innerText || '';
             }
 
             // 画像のフォールバック (OGPが無い場合、ページ内で「最も面積が大きい」画像を探す)

@@ -260,10 +260,21 @@ client.on('messageCreate', async (message: Message) => {
 
 const token = process.env.DISCORD_TOKEN;
 if (token) {
-  console.log('Token found, attempting login...');
-  client.login(token).catch(err => {
-    console.error('Login failed:', err);
-  });
+  const attemptLogin = async () => {
+    let connected = false;
+    while (!connected) {
+      try {
+        console.log('Token found, attempting login...');
+        await client.login(token);
+        connected = true;
+      } catch (err: any) {
+        console.error('Login failed:', err.message || err);
+        console.log('Retrying in 10 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      }
+    }
+  };
+  attemptLogin();
 } else {
   console.error('DISCORD_TOKEN is not defined in .env');
 }
