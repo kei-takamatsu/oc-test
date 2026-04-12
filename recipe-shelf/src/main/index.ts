@@ -306,7 +306,7 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
       clearTimeout(timeout)
       
       try {
-        // DOMのロード状況（中身のテキストが十分に描画されるまで）をポーリングで最大10秒待機する
+        // DOMのロード状況を最大10秒(20 attempts)待機する
         await hiddenWindow.webContents.executeJavaScript(`
           return new Promise((resolve) => {
             let attempts = 0;
@@ -316,14 +316,13 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
               // 少しずつスクロールして遅延読み込みを促す
               window.scrollBy(0, 500);
 
-              // 続きを読むボタンがあれば随時押す (FacebookやTwitter等の「もっと見る」にも対応)
+              // 続きを読むボタンを探してクリック (Facebook向けに全要素をチェック)
               const btns = Array.from(document.querySelectorAll('*'));
               for (const btn of btns) {
-                // テキストノードのみを直下に持つか、一番深い要素で判定する
                 if (btn.children.length > 2) continue; 
                 
                 const t = btn.textContent ? btn.textContent.trim() : '';
-                if (!t || t.length > 20) continue; // テキストが長すぎる要素は無視
+                if (!t || t.length > 25) continue; 
                 
                 const matchKeywords = ['続きを読む', 'more', '続きを見る', 'もっと見る', 'see more', 'さらに表示', '...more', '… さらに表示'];
                 const isMatch = matchKeywords.some(kw => t.toLowerCase() === kw || t.toLowerCase() === 'さらに表示' || t.includes(kw));
@@ -338,7 +337,7 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
                 }
               }
 
-              // すぐに完了にせず、十分な時間（約8秒 = attempts 16回）スクロールとクリックを試行して隠れたテキストを展開させる
+              // 十分な時間（約8秒 = attempts 16回）スクロールとクリックを試行して隠れたテキストを展開させる
               if (attempts >= 16) {
                 clearInterval(timer);
                 window.scrollTo(0, 0); // 最後に一番上に戻しておく
@@ -358,8 +357,13 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
             const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
             const ogDesc = document.querySelector('meta[property="og:description"]')?.content || '';
             
-            // 複雑なDOM構造に依存せず、画面上のすべての表示テキストを丸ごとGeminiに渡して判別させる
-            let bodyText = document.body.innerText;
+            // DOMクローンを使って隠れたテキストも含めて全取得する
+            const clone = document.body.cloneNode(true);
+            const hiddenEls = clone.querySelectorAll('script, style, noscript, iframe, svg, path');
+            hiddenEls.forEach(el => el.remove());
+            
+            // textContent はCSSで隠された「さらに表示」の先の中身もすべて取得できる
+            let bodyText = clone.textContent ? clone.textContent.replace(/\\s+/g, ' ').trim() : document.body.innerText;
             if (!bodyText || bodyText.length < 50) {
                bodyText = document.body.textContent || '';
             }
@@ -436,3 +440,4 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+

@@ -2,7 +2,8 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { LogOut, Clock } from 'lucide-react'
 import { logout } from '../login/actions'
-import SearchInput from './SearchInput'
+import { SearchInput } from './SearchInput'
+import { ReloadButton } from './ReloadButton'
 import SortableRecipeGrid from './SortableRecipeGrid'
 
 export default async function RecipesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -40,7 +41,8 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
         <h1 className="text-xl font-bold text-gray-900">RecipeShelf</h1>
         <div className="flex items-center gap-2">
-          <Link href="/recipes/new" className="px-3 py-1.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors">
+          <ReloadButton />
+          <Link href="/recipes/new" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full font-bold transition-all active:scale-95 shadow-md">
             + 追加
           </Link>
           <form action={logout}>
