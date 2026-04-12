@@ -7,7 +7,8 @@ export default async function RecipesPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  console.log('Current user:', user?.id)
+  console.log('--- Debug: Recipes Page ---')
+  console.log('User ID:', user?.id || 'Not logged in')
 
   const { data: recipes, error } = await supabase
     .from('recipes')
@@ -16,9 +17,15 @@ export default async function RecipesPage() {
     .order('created_at', { ascending: false })
   
   if (error) {
-    console.error('Recipes fetch error:', error)
+    console.error('Recipes fetch error:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code
+    })
   }
-  console.log('Fetched recipes count:', recipes?.length || 0)
+  console.log('Recipes count:', recipes?.length || 0)
+  console.log('---------------------------')
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
