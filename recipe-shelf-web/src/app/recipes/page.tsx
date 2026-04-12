@@ -7,25 +7,22 @@ export default async function RecipesPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  console.log('--- Debug: Recipes Page ---')
-  console.log('User ID:', user?.id || 'Not logged in')
 
-  const { data: recipes, error } = await supabase
+  let { data: recipes, error } = await supabase
     .from('recipes')
     .select('*')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
   
-  if (error) {
-    console.error('Recipes fetch error:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code
-    })
+  if (error && error.code === '42703') {
+    // sort_order column does not exist yet!
+    const fallback = await supabase
+      .from('recipes')
+      .select('*')
+      .order('created_at', { ascending: false })
+    recipes = fallback.data
+    error = fallback.error
   }
-  console.log('Recipes count:', recipes?.length || 0)
-  console.log('---------------------------')
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
