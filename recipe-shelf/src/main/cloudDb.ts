@@ -44,17 +44,27 @@ function toSnake(recipe: Partial<Recipe>, userId: string): any {
 
 export const cloudDbService = {
   getAllRecipes: async (): Promise<Recipe[]> => {
-    const { data, error } = await supabase
+    // sort_orderカラムが存在しない場合に備えてフォールバック
+    let result = await supabase
       .from('recipes')
       .select('*')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
     
-    if (error) {
-      console.error('Failed to fetch recipes from Supabase:', error)
+    if (result.error) {
+      console.warn('sort_order query failed, falling back:', result.error.message)
+      // sort_orderカラムが無い場合はcreated_atのみでソート
+      result = await supabase
+        .from('recipes')
+        .select('*')
+        .order('created_at', { ascending: false })
+    }
+    
+    if (result.error) {
+      console.error('Failed to fetch recipes from Supabase:', result.error)
       return []
     }
-    return (data || []).map(toCamel)
+    return (result.data || []).map(toCamel)
   },
 
   getRecipeById: async (id: number): Promise<Recipe | undefined> => {

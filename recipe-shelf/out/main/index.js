@@ -198,6 +198,7 @@ function toCamel(row) {
     servings: row.servings,
     rating: row.rating,
     notes: row.notes,
+    sortOrder: row.sort_order ?? 0,
     createdAt: row.created_at
   };
 }
@@ -215,12 +216,13 @@ function toSnake(recipe, userId) {
     cook_time: recipe.cookTime,
     servings: recipe.servings,
     rating: recipe.rating || 0,
-    notes: recipe.notes
+    notes: recipe.notes,
+    sort_order: recipe.sortOrder ?? 0
   };
 }
 const cloudDbService = {
   getAllRecipes: async () => {
-    const { data, error } = await supabase.from("recipes").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.from("recipes").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     if (error) {
       console.error("Failed to fetch recipes from Supabase:", error);
       return [];
@@ -255,6 +257,15 @@ const cloudDbService = {
   deleteRecipe: async (id) => {
     const { error } = await supabase.from("recipes").delete().eq("id", id);
     if (error) throw new Error(error.message);
+  },
+  reorderRecipes: async (orderedIds) => {
+    const updates = orderedIds.map(
+      (id, index) => supabase.from("recipes").update({ sort_order: index }).eq("id", id)
+    );
+    const results = await Promise.all(updates);
+    for (const { error } of results) {
+      if (error) throw new Error(error.message);
+    }
   }
 };
 const scraperService = {
@@ -558,6 +569,9 @@ electron.app.whenReady().then(() => {
   });
   electron.ipcMain.handle("delete-recipe", async (_, id) => {
     await cloudDbService.deleteRecipe(id);
+  });
+  electron.ipcMain.handle("reorder-recipes", async (_, orderedIds) => {
+    await cloudDbService.reorderRecipes(orderedIds);
   });
   electron.ipcMain.handle("get-setting", (_, key) => {
     return dbService.getSetting(key);

@@ -8,6 +8,7 @@ const api = {
   addRecipeManual: (recipe) => preload.electronAPI.ipcRenderer.invoke("add-recipe-manual", recipe),
   updateRecipe: (id, recipe) => preload.electronAPI.ipcRenderer.invoke("update-recipe", id, recipe),
   deleteRecipe: (id) => preload.electronAPI.ipcRenderer.invoke("delete-recipe", id),
+  reorderRecipes: (orderedIds) => preload.electronAPI.ipcRenderer.invoke("reorder-recipes", orderedIds),
   getSetting: (key) => preload.electronAPI.ipcRenderer.invoke("get-setting", key),
   saveSetting: (key, value) => preload.electronAPI.ipcRenderer.invoke("save-setting", key, value),
   addRecipeFromText: (text, dataUrl) => preload.electronAPI.ipcRenderer.invoke("add-recipe-from-text", text, dataUrl),
