@@ -51,6 +51,7 @@ export interface Recipe {
   servings?: string
   rating?: number
   notes?: string
+  sortOrder?: number
   createdAt?: string
 }
 

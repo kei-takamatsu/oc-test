@@ -17,6 +17,7 @@ function toCamel(row: any): Recipe {
     servings: row.servings,
     rating: row.rating,
     notes: row.notes,
+    sortOrder: row.sort_order ?? 0,
     createdAt: row.created_at
   }
 }
@@ -36,7 +37,8 @@ function toSnake(recipe: Partial<Recipe>, userId: string): any {
     cook_time: recipe.cookTime,
     servings: recipe.servings,
     rating: recipe.rating || 0,
-    notes: recipe.notes
+    notes: recipe.notes,
+    sort_order: recipe.sortOrder ?? 0
   }
 }
 
@@ -45,6 +47,7 @@ export const cloudDbService = {
     const { data, error } = await supabase
       .from('recipes')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
     
     if (error) {
@@ -107,5 +110,16 @@ export const cloudDbService = {
       .eq('id', id)
 
     if (error) throw new Error(error.message)
+  },
+
+  reorderRecipes: async (orderedIds: number[]): Promise<void> => {
+    // 各レシピのsort_orderを配列のインデックスで一括更新
+    const updates = orderedIds.map((id, index) =>
+      supabase.from('recipes').update({ sort_order: index }).eq('id', id)
+    )
+    const results = await Promise.all(updates)
+    for (const { error } of results) {
+      if (error) throw new Error(error.message)
+    }
   }
 }

@@ -8,7 +8,8 @@ export default async function RecipesPage() {
 
   const { data: recipes } = await supabase
     .from('recipes')
-    .select('id, title, image_local_path, prep_time, cook_time, servings')
+    .select('id, title, image_local_path, prep_time, cook_time, servings, sort_order')
+    .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   return (

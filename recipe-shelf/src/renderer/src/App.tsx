@@ -10,9 +10,87 @@ import {
   Trash2, 
   ExternalLink,
   Globe,
-  Loader2
+  Loader2,
+  GripVertical
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+// Recipe型の簡易宣言（preloadで定義されるが、rendererでも使う）
+interface Recipe {
+  id?: number
+  title: string
+  sourceUrl?: string
+  imageUrl?: string
+  imageLocalPath?: string
+  ingredients: string
+  instructions: string
+  description?: string
+  prepTime?: string
+  cookTime?: string
+  servings?: string
+  rating?: number
+  notes?: string
+  sortOrder?: number
+  createdAt?: string
+}
+
+// ドラッグ可能なレシピカード
+function SortableRecipeCard({ recipe, getImageUrl, onOpen }: {
+  recipe: Recipe
+  getImageUrl: (path?: string) => string
+  onOpen: (recipe: Recipe) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: recipe.id!
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 'auto' as any
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="recipe-card" onClick={() => onOpen(recipe)}>
+      <div 
+        className="drag-handle" 
+        {...attributes} 
+        {...listeners}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <GripVertical size={18} />
+      </div>
+      <img 
+        className="recipe-card-image" 
+        src={getImageUrl(recipe.imageLocalPath)} 
+        alt={recipe.title} 
+      />
+      <div className="recipe-card-content">
+        <h3 className="recipe-card-title">{recipe.title}</h3>
+        <div className="recipe-card-meta">
+          {recipe.cookTime && <span><Clock size={14} /> 調理: {recipe.cookTime}</span>}
+          {recipe.servings && <span><Users size={14} /> {recipe.servings}</span>}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function App() {
   const [session, setSession] = useState<any>(null)
@@ -35,6 +113,31 @@ export default function App() {
 
   // Settings State
   const [apiKey, setApiKey] = useState('')
+
+  // Drag & Drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = recipes.findIndex(r => r.id === active.id)
+    const newIndex = recipes.findIndex(r => r.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reordered = arrayMove(recipes, oldIndex, newIndex)
+    setRecipes(reordered) // 即座にUIに反映
+
+    // バックグラウンドでSupabaseに保存
+    const orderedIds = reordered.map(r => r.id!).filter(Boolean)
+    try {
+      await window.api.reorderRecipes(orderedIds)
+    } catch (e) {
+      console.error('Failed to save order:', e)
+    }
+  }
 
   useEffect(() => {
     const init = async () => {
@@ -252,24 +355,20 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="recipe-grid">
-                {recipes.map(recipe => (
-                  <div key={recipe.id} className="recipe-card" onClick={() => openRecipe(recipe)}>
-                    <img 
-                      className="recipe-card-image" 
-                      src={getImageUrl(recipe.imageLocalPath)} 
-                      alt={recipe.title} 
-                    />
-                    <div className="recipe-card-content">
-                      <h3 className="recipe-card-title">{recipe.title}</h3>
-                      <div className="recipe-card-meta">
-                        {recipe.cookTime && <span><Clock size={14} /> 調理: {recipe.cookTime}</span>}
-                        {recipe.servings && <span><Users size={14} /> {recipe.servings}</span>}
-                      </div>
-                    </div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={recipes.map(r => r.id!)} strategy={rectSortingStrategy}>
+                  <div className="recipe-grid">
+                    {recipes.map(recipe => (
+                      <SortableRecipeCard
+                        key={recipe.id}
+                        recipe={recipe}
+                        getImageUrl={getImageUrl}
+                        onOpen={openRecipe}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
 
               {recipes.length === 0 && (
                 <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-secondary)' }}>

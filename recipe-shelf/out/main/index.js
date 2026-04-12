@@ -148,7 +148,24 @@ const authService = {
   },
   getSession: async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    if (session) {
+      const expiresAt = session.expires_at;
+      const now = Math.floor(Date.now() / 1e3);
+      if (expiresAt && now >= expiresAt - 60) {
+        console.log("[Auth] Access token expired, refreshing...");
+        const { data, error } = await supabase.auth.refreshSession({
+          refresh_token: session.refresh_token
+        });
+        if (error) {
+          console.error("[Auth] Refresh failed:", error.message);
+          return null;
+        }
+        console.log("[Auth] Session refreshed successfully");
+        return data.session;
+      }
+      return session;
+    }
+    return null;
   }
 };
 const storageService = {

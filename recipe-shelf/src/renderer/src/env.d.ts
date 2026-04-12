@@ -12,6 +12,7 @@ interface Recipe {
   servings?: string
   rating?: number
   notes?: string
+  sortOrder?: number
   createdAt?: string
 }
 
@@ -23,6 +24,7 @@ interface Window {
     addRecipeManual: (recipe: any) => Promise<Recipe>
     updateRecipe: (id: number, recipe: any) => Promise<Recipe>
     deleteRecipe: (id: number) => Promise<void>
+    reorderRecipes: (orderedIds: number[]) => Promise<void>
     getSetting: (key: string) => Promise<string | undefined>
     saveSetting: (key: string, value: string) => Promise<void>
     addRecipeFromText: (text: string, dataUrl?: string) => Promise<Recipe>

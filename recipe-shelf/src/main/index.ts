@@ -170,6 +170,10 @@ app.whenReady().then(() => {
     await cloudDbService.deleteRecipe(id)
   })
 
+  ipcMain.handle('reorder-recipes', async (_, orderedIds: number[]) => {
+    await cloudDbService.reorderRecipes(orderedIds)
+  })
+
   ipcMain.handle('get-setting', (_, key: string) => {
     return dbService.getSetting(key)
   })
