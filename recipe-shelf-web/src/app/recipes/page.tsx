@@ -1,25 +1,34 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { LogOut, Search, Clock, Users } from 'lucide-react'
+import { LogOut, Clock } from 'lucide-react'
 import { logout } from '../login/actions'
+import SearchInput from './SearchInput'
 
-export default async function RecipesPage() {
+export default async function RecipesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  let { data: recipes, error } = await supabase
-    .from('recipes')
-    .select('*')
+  const params = await searchParams
+  const q = typeof params.q === 'string' ? params.q : ''
+
+  // ベースクエリの構築
+  let baseQuery = supabase.from('recipes').select('*')
+  if (q) {
+    baseQuery = baseQuery.ilike('title', `%${q}%`) // タイトルで部分一致検索
+  }
+
+  let { data: recipes, error } = await baseQuery
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
   
   if (error && error.code === '42703') {
     // sort_order column does not exist yet!
-    const fallback = await supabase
-      .from('recipes')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let fallbackQuery = supabase.from('recipes').select('*')
+    if (q) {
+      fallbackQuery = fallbackQuery.ilike('title', `%${q}%`)
+    }
+    const fallback = await fallbackQuery.order('created_at', { ascending: false })
     recipes = fallback.data
     error = fallback.error
   }
@@ -43,15 +52,7 @@ export default async function RecipesPage() {
 
       {/* Main Content */}
       <main className="p-4 max-w-3xl mx-auto space-y-6 mt-4">
-        {/* Search Bar - Visual only for now */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="レシピを探す..." 
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
-          />
-        </div>
+        <SearchInput />
 
         {/* Recipe Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
