@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
 import { addRecipe, addRecipeFromUrl } from './actions'
+import { SubmitButton } from './SubmitButton'
 
 export default async function NewRecipePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const resolvedParams = await searchParams;
@@ -9,8 +10,8 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* App Bar */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center shadow-sm">
-        <Link href="/recipes" className="p-2 -ml-2 text-gray-500 hover:text-gray-900 transition-colors">
-          <ChevronLeft size={24} />
+        <Link href="/recipes" className="p-4 -ml-4 text-gray-500 hover:text-gray-900 transition-all active:scale-95 touch-manipulation">
+          <ChevronLeft size={28} />
         </Link>
         <h1 className="text-xl font-bold text-gray-900 ml-2">レシピを手動追加</h1>
       </header>
@@ -43,12 +44,12 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
                 placeholder="https://..."
                 className="flex-1 px-4 py-3 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
               />
-              <button
-                type="submit"
-                className="whitespace-nowrap px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-sm transition-colors"
+              <SubmitButton
+                className="whitespace-nowrap px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-sm transition-colors active:scale-95 touch-manipulation"
+                loadingText="登録中..."
               >
                 あとで解析する
-              </button>
+              </SubmitButton>
             </div>
           </div>
         </form>
@@ -165,13 +166,13 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
 
           {/* Submit */}
           <div className="pt-4 pb-10">
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 px-4 py-4 text-white bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-colors shadow-md text-lg"
+            <SubmitButton
+              className="w-full flex items-center justify-center gap-2 px-4 py-4 text-white bg-orange-500 hover:bg-orange-600 rounded-xl font-bold transition-colors shadow-md text-lg active:scale-95 touch-manipulation"
+              loadingText="保存中..."
             >
-              <Save size={20} />
+              <Save size={20} className="inline-block" />
               レシピを保存する
-            </button>
+            </SubmitButton>
           </div>
         </form>
       </main>
