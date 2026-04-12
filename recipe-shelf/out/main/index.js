@@ -222,12 +222,16 @@ function toSnake(recipe, userId) {
 }
 const cloudDbService = {
   getAllRecipes: async () => {
-    const { data, error } = await supabase.from("recipes").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
-    if (error) {
-      console.error("Failed to fetch recipes from Supabase:", error);
+    let result = await supabase.from("recipes").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
+    if (result.error) {
+      console.warn("sort_order query failed, falling back:", result.error.message);
+      result = await supabase.from("recipes").select("*").order("created_at", { ascending: false });
+    }
+    if (result.error) {
+      console.error("Failed to fetch recipes from Supabase:", result.error);
       return [];
     }
-    return (data || []).map(toCamel);
+    return (result.data || []).map(toCamel);
   },
   getRecipeById: async (id) => {
     const { data, error } = await supabase.from("recipes").select("*").eq("id", id).single();

@@ -6,21 +6,11 @@ import { logout } from '../login/actions'
 export default async function RecipesPage() {
   const supabase = await createClient()
 
-  let result = await supabase
+  const { data: recipes } = await supabase
     .from('recipes')
-    .select('id, title, image_local_path, prep_time, cook_time, servings, sort_order')
+    .select('*')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
-
-  // sort_orderカラムが未追加の場合のフォールバック
-  if (result.error) {
-    result = await supabase
-      .from('recipes')
-      .select('id, title, image_local_path, prep_time, cook_time, servings')
-      .order('created_at', { ascending: false })
-  }
-
-  const recipes = result.data
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
