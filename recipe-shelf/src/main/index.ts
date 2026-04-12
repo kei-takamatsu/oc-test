@@ -317,15 +317,24 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
               window.scrollBy(0, 500);
 
               // 続きを読むボタンがあれば随時押す (FacebookやTwitter等の「もっと見る」にも対応)
-              const btns = Array.from(document.querySelectorAll('span, div, button, a'));
+              const btns = Array.from(document.querySelectorAll('*'));
               for (const btn of btns) {
+                // テキストノードのみを直下に持つか、一番深い要素で判定する
+                if (btn.children.length > 2) continue; 
+                
                 const t = btn.textContent ? btn.textContent.trim() : '';
                 if (!t || t.length > 20) continue; // テキストが長すぎる要素は無視
                 
                 const matchKeywords = ['続きを読む', 'more', '続きを見る', 'もっと見る', 'see more', 'さらに表示', '...more', '… さらに表示'];
-                const isMatch = matchKeywords.some(kw => t.toLowerCase().includes(kw));
+                const isMatch = matchKeywords.some(kw => t.toLowerCase() === kw || t.toLowerCase() === 'さらに表示' || t.includes(kw));
                 if (isMatch) {
-                  try { btn.click(); } catch (e) {}
+                  try { 
+                    btn.click(); 
+                    // ReactやSPA向けに明示的なマウスイベントも発火
+                    btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
+                    btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
+                    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+                  } catch (e) {}
                 }
               }
 
