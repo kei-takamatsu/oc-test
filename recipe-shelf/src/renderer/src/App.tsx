@@ -11,7 +11,8 @@ import {
   ExternalLink,
   Globe,
   Loader2,
-  GripVertical
+  GripVertical,
+  RefreshCw
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -349,10 +350,15 @@ export default function App() {
             >
               <div className="header">
                 <h1>保存済みレシピ</h1>
-                <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
-                  <Plus size={20} />
-                  レシピを追加
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn" style={{ background: 'transparent', color: 'var(--text-secondary)' }} onClick={loadRecipes} title="最新の情報を取得">
+                    <RefreshCw size={20} />
+                  </button>
+                  <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+                    <Plus size={20} />
+                    レシピを追加
+                  </button>
+                </div>
               </div>
 
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
