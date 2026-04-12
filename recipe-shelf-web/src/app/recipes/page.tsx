@@ -56,7 +56,7 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
         <SearchInput />
 
         {/* Recipe Grid (Sortable) */}
-        <SortableRecipeGrid initialRecipes={recipes} />
+        <SortableRecipeGrid initialRecipes={recipes || []} />
       </main>
     </div>
   )
