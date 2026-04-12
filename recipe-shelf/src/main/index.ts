@@ -306,49 +306,53 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
       clearTimeout(timeout)
       
       try {
-        // DOMのロード状況を最大10秒(20 attempts)待機する
-        await hiddenWindow.webContents.executeJavaScript(`
-          return new Promise((resolve) => {
-            let attempts = 0;
-            const timer = setInterval(() => {
-              attempts++;
-              
-              // 少しずつスクロールして遅延読み込みを促す
-              window.scrollBy(0, 500);
+        // ポーリングで数回スクロールしつつネイティブクリックを試行（最大10秒 = 5周）
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise(r => setTimeout(r, 2000))
+          
+          // スクロールダウン
+          await hiddenWindow.webContents.executeJavaScript('window.scrollBy(0, 500);').catch(() => {})
 
-              // 続きを読むボタンを探してクリック (Facebook向けに全要素をチェック)
+          // 「さらに表示」等の座標を取得
+          const coords = await hiddenWindow.webContents.executeJavaScript(`
+            (() => {
               const btns = Array.from(document.querySelectorAll('*'));
+              const targets = [];
               for (const btn of btns) {
                 if (btn.children.length > 2) continue; 
-                
                 const t = btn.textContent ? btn.textContent.trim() : '';
                 if (!t || t.length > 25) continue; 
                 
                 const matchKeywords = ['続きを読む', 'more', '続きを見る', 'もっと見る', 'see more', 'さらに表示', '...more', '… さらに表示'];
                 const isMatch = matchKeywords.some(kw => t.toLowerCase() === kw || t.toLowerCase() === 'さらに表示' || t.includes(kw));
+                
                 if (isMatch) {
-                  try { 
-                    btn.click(); 
-                    // ReactやSPA向けに明示的なマウスイベントも発火
-                    btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, view: window }));
-                    btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, view: window }));
-                    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-                  } catch (e) {}
+                  const rect = btn.getBoundingClientRect();
+                  if (rect.width > 0 && rect.height > 0) {
+                     targets.push({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+                  }
                 }
               }
+              return targets;
+            })();
+          `).catch(() => [])
 
-              // 十分な時間（約8秒 = attempts 16回）スクロールとクリックを試行して隠れたテキストを展開させる
-              if (attempts >= 16) {
-                clearInterval(timer);
-                window.scrollTo(0, 0); // 最後に一番上に戻しておく
-                resolve(true);
-              }
-            }, 500);
-          });
-        `).catch(() => {});
+          // ネイティブマウスクリックを送信 (isTrusted を true にするため)
+          if (coords && coords.length > 0) {
+            for (const pos of coords) {
+              const x = Math.round(pos.x);
+              const y = Math.round(pos.y);
+              hiddenWindow.webContents.sendInputEvent({ type: 'mouseMove', x, y });
+              hiddenWindow.webContents.sendInputEvent({ type: 'mouseDown', x, y, button: 'left', clickCount: 1 });
+              hiddenWindow.webContents.sendInputEvent({ type: 'mouseUp', x, y, button: 'left', clickCount: 1 });
+              await new Promise(r => setTimeout(r, 300)); // クリック間のわずかな待機
+            }
+          }
+        }
         
-        // 更なる非同期レンダリングを少しだけ待つ
-        await new Promise(r => setTimeout(r, 1500))
+        // 最後に一番上に戻しておく
+        await hiddenWindow.webContents.executeJavaScript('window.scrollTo(0, 0);').catch(() => {})
+        await new Promise(r => setTimeout(r, 1000)) // 展開を待つ
 
         // ページ内の表示テキストと画像を抽出
         const pageData = await hiddenWindow.webContents.executeJavaScript(`
