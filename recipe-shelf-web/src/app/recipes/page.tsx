@@ -2,7 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { LogOut, Clock } from 'lucide-react'
 import { logout } from '../login/actions'
-import { SearchInput } from './SearchInput'
+import SearchInput from './SearchInput'
 import { ReloadButton } from './ReloadButton'
 import SortableRecipeGrid from './SortableRecipeGrid'
 
