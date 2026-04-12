@@ -357,10 +357,32 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
             const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
             const ogDesc = document.querySelector('meta[property="og:description"]')?.content || '';
             
-            // 複雑なDOM構造に依存せず、画面上のすべての表示テキストを丸ごとGeminiに渡して判別させる
-            let bodyText = document.body.innerText;
+            // CSS等で隠された全文も取得するための独自抽出関数
+            function extractReadableText(node) {
+              if (!node) return "";
+              const ignoreTags = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'PATH', 'IFRAME', 'META', 'LINK'];
+              if (ignoreTags.includes(node.nodeName)) return "";
+              if (node.nodeType === 3) {
+                  return node.textContent || "";
+              }
+              
+              const isBlock = ['DIV', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BR', 'TR', 'ARTICLE', 'SECTION'].includes(node.nodeName);
+              let text = "";
+              
+              for (const child of node.childNodes) {
+                 text += extractReadableText(child);
+              }
+              
+              if (isBlock) text += "\\n";
+              return text;
+            }
+
+            let bodyText = extractReadableText(document.body);
+            // 余分な空行を圧縮する
+            bodyText = bodyText.replace(/\\n{3,}/g, '\\n\\n').trim();
+
             if (!bodyText || bodyText.length < 50) {
-               bodyText = document.body.textContent || '';
+               bodyText = document.body.innerText || '';
             }
 
             // 画像のフォールバック (OGPが無い場合、ページ内で「最も面積が大きい」画像を探す)
