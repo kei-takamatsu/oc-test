@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,11 @@ import { updateRecipeOrder } from './actions'
 export default function SortableRecipeGrid({ initialRecipes }: { initialRecipes: any[] }) {
   const [recipes, setRecipes] = useState(initialRecipes)
   const [isPending, startTransition] = useTransition()
+
+  // サーバー側からの新しい検索結果やデータ更新をローカルステートに同期
+  useEffect(() => {
+    setRecipes(initialRecipes)
+  }, [initialRecipes])
 
   // 1. スマホ(Touch)でもスクロールできるようにする設定
   const sensors = useSensors(
