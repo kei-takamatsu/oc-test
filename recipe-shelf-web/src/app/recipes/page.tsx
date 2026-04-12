@@ -6,11 +6,19 @@ import { logout } from '../login/actions'
 export default async function RecipesPage() {
   const supabase = await createClient()
 
-  const { data: recipes } = await supabase
-    .from('recipes')
-    .select('*')
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+  // ユーザー認証を明示的に確認
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  let recipes: any[] = []
+  if (user) {
+    const { data } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+    recipes = data || []
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
