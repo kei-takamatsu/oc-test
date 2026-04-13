@@ -1,0 +1,48 @@
+body.login {
+
+}
+
+body.login .top_back {
+    background-image: none;
+}
+
+.login_box {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 15px 15px 25px 15px;
+    border: 0px solid #666;
+    background: rgba(255, 255, 255, .8);
+}
+
+.login_box_wrap {
+    padding: 10px;
+}
+
+.login_box h3 {
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+.login_box .forgot_pass {
+    margin: 10px 0 0 0;
+    text-align: center;
+}
+
+.login_box hr {
+    border: none;
+    border-top: solid 1px #ccc;
+    height: 1px;
+    color: #fff;
+    margin: 0 6 0 6;
+}
+
+.forgot_pass a, .forgot_pass a:hover {
+    color: #000;
+}
+
+@media screen and (max-width: 748px) {
+    .login_box {
+        border-color: transparent;
+        margin: 0px auto;
+    }
+}

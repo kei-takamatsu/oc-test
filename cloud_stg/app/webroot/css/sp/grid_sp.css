@@ -1,0 +1,5 @@
+@media screen and (max-width: 400px) {
+    .grid_wrap, .grid_wrap_report {
+        padding: 0;
+    }
+}

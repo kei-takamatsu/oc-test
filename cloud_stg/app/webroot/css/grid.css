@@ -1,0 +1,114 @@
+/*************** Grid *****************/
+.grid_wrap {
+    width: 100%;
+    max-width: 410px;
+    padding: 5px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.grid {
+    max-width: 100%;
+    position: relative;
+}
+
+.grid a.btn,
+.grid a.btn:hover,
+.grid_string .grid_title a,
+.grid_string .grid_title a:hover {
+    color: #fff;
+}
+
+.grid .imgholder img {
+    max-width: 100%;
+}
+
+.grid_footer {
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 10px;
+    padding-left: 10px;
+}
+
+.grid h2 {
+    font-size: 12px;
+    margin: 5px 0;
+    padding: 0 10px 0 5px;
+    font-weight: bold;
+}
+
+.grid_string {
+    position: absolute;
+    bottom: 0;
+    background: rgba(0, 0, 0, .5);
+    width: 100%;
+    color: #fff;
+    padding: 0;
+    margin: 0;
+}
+
+.grid_string .left {
+    float: left;
+    width: 220px;
+}
+
+.grid_string .right {
+    float: right;
+    padding-right: 5px;
+}
+
+/****** graph ******/
+.grid .progress {
+    margin-bottom: 0px;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.grid .progress-bar {
+    color: transparent;
+    line-height: 10px;
+}
+
+/****** success ******/
+.grid .project_success {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 80%;
+    margin-left: -40%;
+    padding: 4px 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+/****** buttons ******/
+.grid_wrap .buttons {
+    width: 100%;
+    max-width: 410px;
+    margin: 0 auto;
+}
+
+.grid_wrap .buttons .left,
+.grid_wrap .buttons .right {
+    float: left;
+    width: 50%;
+}
+
+@media screen and (min-width: 700px) {
+    #grid_container {
+        margin: 0 auto;
+    }
+
+    .grid_wrap {
+        padding: 5px 0 5px 10px;
+    }
+
+    .grid, .grid_wrap {
+        width: 410px;
+        float: left;
+    }
+}

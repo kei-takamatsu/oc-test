@@ -1,0 +1,541 @@
+.btn {
+    border-radius: 0;
+    -webkit-font-smoothing: antialiased;
+    font-weight: bold;
+}
+
+.btn-success {
+    background: #090;
+    border-color: #090;
+}
+
+.btn-success:hover,
+.btn-success:active,
+.btn-success:focus {
+    background: #0c0;
+    border-color: #0c0;
+}
+
+.btn-primary {
+    background: #039;
+    border-color: #039;
+}
+
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus {
+    background: #06c;
+    border-color: #06c;
+}
+
+.btn-info {
+    background: #0cf;
+    border-color: #0cf;
+}
+
+.btn-info:hover,
+.btn-info:active,
+.btn-info:focus {
+    background: #0ef;
+    border-color: #0ef;
+}
+
+.btn-danger {
+    background: #c44;
+    border-color: #c44;
+}
+
+.btn-danger:hover,
+.btn-danger:active,
+.btn-danger:focus {
+    background: #f44;
+    border-color: #f44;
+}
+
+.btn-warning {
+    background: #fc0;
+    border-color: #fc0;
+}
+
+.btn-warning:hover,
+.btn-warning:active,
+.btn-warning:focus {
+    background: #fd0;
+    border-color: #fd0;
+}
+
+.btn-white {
+    background: transparent;
+    border-color: #fff;
+    color: #fff;
+}
+
+.btn-white:hover,
+.btn-white:active,
+.btn-white:focus {
+    background: #fff;
+    border-color: #fff;
+    color: #000;
+}
+/************ viewport ***************/
+@-ms-viewport
+{
+    width: auto;
+    initial-scale: 1;
+}
+@viewport
+{
+    width: device-width;
+    initial-scale: 1;
+}
+/************* a *******************/
+a, a:hover, a:focus, a:active {
+    text-decoration: none;
+    color: #03c;
+}
+
+/*************** Flash *****************/
+.flash_wrap {
+    position: fixed;
+    width: 100%;
+    z-index: 100;
+    top: 0px;
+
+    -webkit-animation: fadein_out 5s ease 0s 1;
+    -webkit-animation-fill-mode: forwards;
+    -moz-animation: fadein_out 5s ease 0s 1;
+    -moz-animation-fill-mode: forwards;
+}
+
+.flash {
+    background-color: rgba(100, 220, 250, 0.95);
+    color: #000;
+    min-width: 300px;
+    max-width: 500px;
+    border-radius: 0 0 10px 10px;
+    padding: 10px;
+    position: relative;
+    top: 0px;
+    z-index: 100;
+    text-align: center;
+    margin: 0 auto;
+}
+
+@-webkit-keyframes fadein_out {
+    0% {
+        top: -200px;
+        opacity: 0;
+    }
+    20% {
+        top: 0px;
+        opacity: 1;
+    }
+    80% {
+        top: 0px;
+        opacity: 0.9;
+    }
+    100% {
+        top: -200px;
+        opacity: 0;
+    }
+}
+
+@-moz-keyframes fadein_out {
+    0% {
+        top: -200px;
+        opacity: 0;
+    }
+    20% {
+        top: 0px;
+        opacity: 1;
+    }
+    80% {
+        top: 0px;
+        opacity: 0.9;
+    }
+    100% {
+        top: -200px;
+        opacity: 0;
+    }
+}
+
+/************* html body *******************/
+html {
+    height: 100%;
+    min-height: 100%;
+}
+
+/************* body *******************/
+body {
+    height: 100%;
+    min-height: 100%;
+    font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, "メイリオ", 'ＭＳ Ｐゴシック', 'ＭＳ ゴシック', sans-serif;
+    vertical-align: baseline;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background: #fff;
+}
+
+/************* none *******************/
+.none {
+    display: none;
+}
+
+.error-message {
+    color: red;
+}
+
+/************* h *******************/
+h2 {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    margin: 0 0 0 0;
+    border-bottom: 1px solid #666;
+}
+
+h4 {
+    padding: 10px;
+    font-weight: bold;
+    margin: 20px 0;
+    border-bottom: 1px solid #666;
+}
+
+h5 {
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 0 5px 0;
+    border-bottom: 1px solid #666;
+}
+
+/************* Menu *******************/
+#header {
+    position: static;
+    padding: 0;
+}
+
+.top_menu {
+    padding: 10px;
+    width: 100%;
+    background: black;
+}
+
+.top_menu .right {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    top: 12px;
+    font-size: 16px;
+}
+
+/************* Logo *******************/
+#logo {
+    color: #fff;
+    text-align: left;
+    margin: 0 10px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+#logo img {
+    height: 25px;
+}
+
+/************* Footer *******************/
+#wrap {
+    width: 100%;
+    height: auto !important;
+    height: 100%;
+    min-height: 100%;
+    position: relative;
+}
+
+#top_header {
+    width: 100%;
+}
+
+#contents {
+    padding-bottom: 94px;
+    height:100%;
+    width:100%;
+}
+
+.footer {
+    color: #eee;
+    font-size: 13px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    height: 64px;
+}
+
+.footer.footer_pc {
+    padding: 15px 0 10px 0;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.footer a, #footer a:hover {
+    color: #eee;
+}
+
+.footer .menu div {
+    float: left;
+    padding: 0 10px;
+}
+
+.footer .copyright {
+    margin-top: 3px;
+}
+
+.footer.footer_sp {
+    height: 40px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.footer .btn_sp {
+    z-index: 10;
+    width: 100%;
+    height: 40px;
+    background-color: rgba(0, 0, 0, .8);
+    padding: 13px;
+}
+
+.footer .btn_sp:hover {
+    background: #09c;
+}
+
+.footer .btn_sp:active {
+    background: #09c;
+}
+
+.footer .menu_sp {
+    position: absolute;
+    bottom: 40px;
+    display: none;
+    text-align: center;
+    background: transparent;
+    width: 100%;
+    background-color: rgba(0, 0, 0, .9);
+}
+
+.footer .menu_sp div {
+    border-bottom: 1px solid #fff;
+    padding: 10px 0;
+}
+
+.footer .menu_sp div:active,
+.footer .menu_sp div:hover {
+    background: #09c;
+}
+
+/************* Graph *******************/
+.progress-bar-warning {
+    background-color: #09c;
+}
+
+/*************** BackTop *****************/
+#back_top {
+    position: absolute;
+    position: fixed;
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    bottom: 20px;
+    right: 20px;
+}
+
+#back_top img {
+    opacity: 0.8;
+}
+
+#back_top img:hover {
+    opacity: 1;
+}
+
+@media screen and (max-width: 750px) {
+    #back_top {
+        right: 5px;
+        bottom: 25px;
+    }
+}
+
+/************* hr *******************/
+hr {
+    border: none;
+    border-top: solid 1px #666;
+    height: 1px;
+    color: #666;
+}
+
+/************* setting header *******************/
+.setting_menu {
+    padding: 5px 10px;
+    background: #ccc;
+    font-weight: bold;
+    line-height: 200%;
+}
+
+/************* setting bread / title *******************/
+div.bread {
+    padding: 5px;
+}
+
+div.setting_title {
+    padding: 0 10px;
+}
+
+/************* settings edit_project_toppage / project_comments *******************/
+.edit_project_toppage,
+.project_comments {
+    margin-top: 20px;
+}
+
+.edit_project_toppage .search_box,
+.project_comments .search_box {
+    margin: 0 auto;
+    width: 280px;
+}
+
+.edit_project_toppage .search_input,
+.project_comments .search_input {
+    float: left;
+    padding-right: 20px;
+}
+
+.edit_project_toppage .search_btn,
+.project_comments .search_btn {
+    float: left;
+    margin-top: 26px;
+}
+
+/************* setting_project_main_menu / setting_project_menu / setting_design_menu *******************/
+.setting_project_main_menu,
+.setting_project_menu,
+.setting_design_menu {
+    display: table;
+    width: 100%;
+}
+
+.setting_project_main_menu div,
+.setting_project_menu div,
+.setting_design_menu div {
+    background: #c2c2c2;
+    display: table-cell;
+    text-align: center;
+    width: 25%;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.setting_design_menu div {
+    width: 50%;
+}
+
+.setting_project_main_menu div {
+    width: 20%;
+}
+
+.setting_project_main_menu div:hover,
+.setting_project_menu div:hover,
+.setting_design_menu div:hover {
+    background: #09c;
+    color: white;
+}
+
+.setting_project_main_menu div.active,
+.setting_project_menu div.active,
+.setting_design_menu div.active {
+    background: #09c;
+    color: white;
+}
+
+/************* settings create_project *******************/
+.project_create {
+    margin-top: 20px;
+}
+
+/************* settings project_edit *******************/
+.project_edit .user_img {
+    float: left;
+    padding-right: 30px;
+}
+
+.project_edit .user_name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+/************* setting_user_menu setting_desing_menu *******************/
+.setting_user_menu {
+    width: 100%;
+    display: table;
+}
+
+.setting_user_menu div {
+    display: table-cell;
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.setting_user_menu div a {
+    background: #d2d2d2;
+    border-radius: 20px;
+    padding: 7px 20px;
+    color: #000;
+}
+
+.setting_user_menu div a:hover {
+    background: #e2e2e2;
+}
+
+.setting_user_menu div.active a {
+    background: #09c;
+    color: #fff;
+}
+
+/************* settings edit_design *******************/
+h4.no_under_line {
+    font-size: 15px;
+    border-bottom: 0px;
+    border-left: 10px solid #09c;
+}
+
+/************* social *******************/
+.social {
+    margin-top: 30px;
+}
+
+.social .btn {
+    max-width: 500px;
+    margin: 0 auto 20px auto;
+}
+
+/************* project backing_level *******************/
+.max_backing_level_num {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 30px 10px 20px 10px;
+    border-bottom: 1px solid #999;
+}
+
+/*************** project Detail project contents*****************/
+.project_contents {
+    margin-top: 0px;
+}
+
+.project_contents .btn_menu {
+    margin-bottom: 5px;
+}
+
+.project_contents .project_content {
+    padding: 10px;
+}

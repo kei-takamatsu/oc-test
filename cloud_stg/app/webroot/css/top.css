@@ -1,0 +1,204 @@
+h3 {
+    text-align: center;
+    color: #333;
+}
+
+h3.pickup {
+    padding: 20px 0 10px 0;
+}
+
+h3.report {
+    padding: 10px 0;
+    margin: 10px 0;
+}
+
+.top_box {
+    padding: 0;
+    margin: 0;
+}
+
+#contents {
+    padding-bottom: 66px;
+}
+
+/*************** top_box  *****************/
+.toppage .top_box {
+    position: relative;
+    display: table;
+    width: 100%;
+}
+
+.toppage .top_box:before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 0;
+    z-index: 0;
+}
+
+/*************** Jumbotron > content1 & content2  *****************/
+.top_box .content1,
+.top_box .content2 {
+    text-align: center;
+    padding: 40px 0 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.top_box .content1 {
+    font-size: 25px;
+}
+
+.top_box h1 {
+    padding: 0px 20px;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+@media screen and (max-width: 780px) {
+    .top_box .content1,
+    .top_box .content2 {
+        padding: 50px 0 0 0;
+    }
+
+    .top_box h1 {
+        font-size: 25px;
+    }
+
+    h3 {
+        padding: 10px 0 5px 0;
+    }
+
+    #contents {
+        padding-bottom: 40px;
+    }
+}
+
+/*************** pickup_project  *****************/
+.pickup_project_box {
+    width: 100%;
+    padding: 10px 10px 20px 10px;
+    margin-bottom: 10px;
+}
+
+.pickup_project {
+    margin: 0 auto 20px auto;
+    display: table;
+    box-shadow: 0 4px 0 #ccc;
+}
+
+.pickup_project .imgholder,
+.pickup_project .right {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.pickup_project .imgholder {
+    position: relative;
+}
+
+.pickup_project .right {
+    padding: 10px 20px;
+    background: #fff;
+    position: relative;
+    max-width: 560px;
+}
+
+.pickup_project h2.title a {
+    color: #000;
+    font-size: 18px;
+}
+
+.pickup_project p.description {
+    font-size: 13px;
+}
+
+.pickup_project .graph_footer {
+    position: absolute;
+    bottom: 0px;
+    width: 90%;
+}
+
+.pickup_project .grid_footer {
+    font-size: 12px;
+    display: table;
+    width: 100%;
+}
+
+.pickup_project .grid_footer div {
+    display: table-cell;
+    width: 33%;
+    text-align: center;
+    padding-bottom: 5px;
+}
+
+/****** success ******/
+.pickup_project .project_success {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 80%;
+    margin-left: -40%;
+    padding: 4px 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+@media screen and (max-width: 749px) {
+    .pickup_project {
+        display: block;
+        max-width: 400px;
+        min-width: 100px;
+    }
+
+    .pickup_project .imgholder,
+    .pickup_project .right {
+        display: block;
+        margin: 0;
+    }
+
+    .pickup_project .right {
+        padding: 10px 10px 10px 10px;
+        max-width: 400px;
+        background: #fff;
+        position: relative;
+    }
+
+    .pickup_project h2.title {
+        margin: 0 0 10px 0;
+    }
+
+    .pickup_project h2.title a {
+        color: #000;
+        font-size: 15px;
+    }
+
+    .pickup_project .graph_footer {
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .pickup_project .grid_footer {
+        font-size: 12px;
+        display: table;
+    }
+
+    .pickup_project .grid_footer div {
+        display: table-cell;
+        width: 33%;
+        text-align: center;
+        padding-bottom: 0px;
+    }
+}
+
+/*************** report  *****************/
+.reports {
+    margin-top: 30px;
+    padding-bottom: 30px;
+}

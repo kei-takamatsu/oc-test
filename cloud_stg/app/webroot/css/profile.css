@@ -1,0 +1,95 @@
+#contents {
+    padding-bottom: 89px;
+}
+
+/*************** profile header *****************/
+.profile .profile_header_wrap {
+    padding: 50px 0 50px 0;
+    position: relative;
+    width: 100%;
+}
+
+.profile .profile_header {
+    display: table;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.profile .left,
+.profile .right {
+    display: table-cell;
+    vertical-align: middle;
+    padding: 0 30px;
+}
+
+.profile .left .user_img {
+    display: table-cell;
+}
+
+.profile .left .name {
+    display: table-cell;
+
+}
+
+.profile .profile_header .profile_nick_name {
+    font-size: 25px;
+    font-weight: bold;
+    word-break: break-all;
+    padding-left: 15px;
+}
+
+.profile .profile_header .profile_address {
+    padding-left: 15px;
+}
+
+.profile .profile_header .profile_url {
+    margin-top: 20px;
+}
+
+.profile .profile_header .right {
+    max-width: 500px;
+}
+
+/*************** profile sub menu *****************/
+.mypage_sub_menu {
+    margin: 10px 20px 20px 20px;
+}
+
+@media screen and (max-width: 1000px) {
+    .profile .left .user_img {
+        display: table-row;
+    }
+
+    .profile .left .name {
+        display: table-row;
+    }
+
+    .profile .left {
+        text-align: center;
+    }
+
+    .profile .profile_header .profile_nick_name {
+        padding-left: 0px;
+    }
+
+    .profile .profile_header .profile_address {
+        padding-left: 0px;
+    }
+
+    .profile .profile_header .profile_nick_name {
+        margin-top: 10px;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .profile .left,
+    .profile .right {
+        display: block;
+    }
+
+    .profile .left {
+        max-width: 260px;
+        margin: 0 auto 20px auto;
+    }
+
+}

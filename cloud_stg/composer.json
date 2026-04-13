@@ -1,0 +1,9 @@
+{
+  "name": "Cloud",
+  "require": {
+    "facebook/graph-sdk" : "~5.0"
+  },
+  "config": {
+    "vendor-dir": "app/Vendor/"
+  }
+}

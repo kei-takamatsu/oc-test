@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="レイヤー_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 107.8 107.8"
+	 style="enable-background:new 0 0 107.8 107.8;" xml:space="preserve">
+<style type="text/css">
+	.st0{clip-path:url(#SVGID_2_);}
+	.st1{fill:#FFFFFF;}
+	.st2{fill:none;stroke:#FFFFFF;stroke-width:4;stroke-miterlimit:10;}
+</style>
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  bottomLeftOrigin="true" height="107.8" width="107.8" x="0" y="0"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<g>
+	<g>
+		<defs>
+			<circle id="SVGID_1_" cx="53.9" cy="53.9" r="51.9"/>
+		</defs>
+		<clipPath id="SVGID_2_">
+			<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st0">
+			<path class="st1" d="M35.2,22.9v23.5h4.5v-19h31.8l-10.1,6.8c-1.1,0.8-1.8,2.1-1.8,3.4v38.6H39.7V61h-4.5v19.9h24.4v9.6
+				c0,0.6,0.3,1.1,0.8,1.4s1.2,0.2,1.6-0.1l16.1-10.9v-58H35.2z"/>
+			<path class="st1" d="M45,62.1c0,0.2,0.1,0.5,0.4,0.6c0.2,0.1,0.5,0.1,0.7-0.1l10.5-8.9l-10.5-8.9c-0.2-0.2-0.5-0.2-0.7-0.1
+				C45.1,44.8,45,45,45,45.3v4.5H19.2v7.8H45V62.1L45,62.1z"/>
+		</g>
+	</g>
+</g>
+<circle class="st2" cx="53.9" cy="53.9" r="51.9"/>
+</svg>

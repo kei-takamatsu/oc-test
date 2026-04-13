@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+	<!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+	<!ENTITY ns_graphs "http://ns.adobe.com/Graphs/1.0/">
+	<!ENTITY ns_vars "http://ns.adobe.com/Variables/1.0/">
+	<!ENTITY ns_imrep "http://ns.adobe.com/ImageReplacement/1.0/">
+	<!ENTITY ns_sfw "http://ns.adobe.com/SaveForWeb/1.0/">
+	<!ENTITY ns_custom "http://ns.adobe.com/GenericCustomNamespace/1.0/">
+	<!ENTITY ns_adobe_xpath "http://ns.adobe.com/XPath/1.0/">
+]>
+<svg version="1.1" id="レイヤー_1" xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns:graph="&ns_graphs;"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 70.2 70.2"
+	 style="enable-background:new 0 0 70.2 70.2;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#8B4D5A;}
+	.st1{fill:none;stroke:#FFFFFF;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+</style>
+<metadata>
+	<sfw  xmlns="&ns_sfw;">
+		<slices></slices>
+		<sliceSourceBounds  bottomLeftOrigin="true" height="70.2" width="70.2" x="559.9" y="-455.6"></sliceSourceBounds>
+	</sfw>
+</metadata>
+<circle class="st0" cx="35.1" cy="35.1" r="35.1"/>
+<g>
+	<rect x="17.2" y="29.1" class="st1" width="36" height="5"/>
+	<line class="st1" x1="50.6" y1="36.8" x2="51.2" y2="34.1"/>
+	<polyline class="st1" points="19.6,36.8 22.2,52.1 47.2,52.1 50.6,36.8 	"/>
+	<line class="st1" x1="19.2" y1="34.1" x2="19.6" y2="36.8"/>
+	<path class="st1" d="M47.5,29.1l-2.4-7.6c-0.3-0.8-1.1-1.4-1.9-1.4h-3"/>
+	<rect x="30.2" y="18.1" class="st1" width="10" height="3"/>
+	<path class="st1" d="M22.8,29.1l2.4-7.6c0.3-0.8,1.1-1.4,1.9-1.4h3"/>
+	<line class="st1" x1="32.2" y1="38.1" x2="32.2" y2="48.1"/>
+	<line class="st1" x1="26.2" y1="38.1" x2="26.2" y2="48.1"/>
+	<line class="st1" x1="43.2" y1="38.1" x2="43.2" y2="48.1"/>
+	<line class="st1" x1="37.2" y1="38.1" x2="37.2" y2="48.1"/>
+</g>
+</svg>

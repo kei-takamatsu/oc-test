@@ -1,0 +1,97 @@
+/*************** pay *****************/
+.pay {
+    padding: 0 10px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/*************** Pay header *****************/
+.pay_header {
+    text-align: center;
+    padding: 10px 10px 20px 10px;
+    margin-bottom: 20px;
+}
+
+.pay_header h1 {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/*************** h *****************/
+.pay h3 {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.pay h4 {
+    padding: 0;
+    margin: 5px 0 5px 0;
+}
+
+/*************** backing level *****************/
+.pay.index {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.backing_levels {
+    margin-top: 30px;
+    top: 12px;
+}
+
+p.return_price {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.backing_levels .backing_level {
+    background: #d2d2d2;
+    margin-bottom: 20px;
+    padding: 10px;
+    box-shadow: 0px 4px 0 #959595;
+    cursor: pointer;
+}
+
+.backing_levels .backing_level:hover {
+    background: #e2e2e2;
+    box-shadow: 0px 4px 0 #a5a5a;
+}
+
+.backing_levels .backing_level.finish {
+    cursor: default;
+}
+
+.backing_levels .backing_level.finish:hover {
+    background: #f2f2f2;
+}
+
+/*************** backed_project add *****************/
+.pay.add {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/*************** card *****************/
+.pay_return {
+    background: #e2e2e2;
+    border: 1px solid #999;
+    padding: 10px;
+}
+
+.card_input_box {
+    margin-top: 20px;
+}
+
+.confirm_box {
+    background: #fff;
+    padding: 10px;
+    border: 1px solid #090;
+    margin-bottom: 20px;
+}
+
+.card_input_box {
+    margin-top: 10px;
+    padding: 15px;
+    border: 1px solid #ccc;
+}

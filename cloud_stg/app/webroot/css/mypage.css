@@ -1,0 +1,276 @@
+/***************  Mypage    *****************/
+h4 {
+    text-align: center;
+    padding: 15px 0 15px 0;
+}
+
+/***************  Mypage Header *****************/
+.mypage_header .top_padding {
+    height: 40px;
+}
+
+.mypage_header .header_content {
+    padding: 0px 0 0 0;
+}
+
+.mypage_header .menu {
+    color: #000;
+    display: table;
+    width: 100%;
+    position: absolute;
+    position: fixed;
+    z-index: 1;
+}
+
+.mypage_header .menu div {
+    display: table-cell;
+    cursor: pointer;
+    text-align: center;
+}
+
+.mypage_header .menu div.mypage_menu {
+    font-size: 20px;
+    padding: 0 10px;
+    width: 14.28%;
+    padding: 8px 10px 4px 10px;
+}
+
+.mypage_header .user_info {
+    padding: 5px 0 0 10px;
+    margin: 40px 0 0 0;
+    color: #000;
+    height: 40px;
+}
+
+.mypage_header .user_info div {
+    padding: 0 10px 0 0;
+    font-size: 16px;
+    vertical-align: middle;
+    float: left;
+    display: table-cell;
+}
+
+.mypage_header .user_info div.nick_name {
+    padding-top: 3px;
+}
+
+.mypage_header .user_info div.profile_btn {
+    float: right;
+}
+
+/***************  Mypage Sub menu *****************/
+.mypage .mypage_content .sub_menu_wrap {
+    display: table;
+    width: 100%;
+}
+
+.mypage .mypage_content .sub_menu {
+    color: #000;
+    padding: 8px 0;
+    display: table-cell;
+    text-align: center;
+    cursor: pointer;
+    height: 35px;
+}
+
+.mypage .content {
+    padding: 10px;
+    margin: 0 auto;
+}
+
+.mypage h2.title {
+    background: #eee;
+    margin: 0;
+    padding: 8px;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+/*************** Mypage project_menu *****************/
+.sub_menu_wrap {
+}
+
+.sub_menu_wrap div.sub_menu {
+    width: 33%;
+}
+
+.sub_menu_wrap div.report_menu {
+    width: 34%;
+}
+
+.sub_menu_wrap div.report_sub_menu {
+    position: absolute;
+    width: 50%;
+    top: 156px;
+    right: 0;
+    z-index: 4;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+}
+
+.sub_menu_wrap div.report_sub_menu div {
+    padding: 10px 10px 10px 20px;
+    cursor: pointer;
+}
+
+.sub_menu_wrap div.report_sub_menu div:hover {
+    background: rgba(100, 100, 100, 1);
+}
+
+/*************** Mypage report    *****************/
+.mypage .report_edit_menu {
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+}
+
+.mypage .report_edit_menu div {
+    display: table-cell;
+    width: 33%;
+    text-align: center;
+}
+
+.mypage .report_edit_menu div p {
+    padding: 5px;
+    margin: 0;
+}
+
+.mypage .report_edit_menu div.active p {
+    background: #eee;
+    border-radius: 20px;
+}
+
+.mypage .report_edit_detail_header {
+    padding: 10px 10px 20px 10px;
+}
+
+.mypage .btn_menu {
+    margin-bottom: 5px;
+}
+
+hr.report_edit {
+    border: 0;
+    border-bottom: 1px solid #999;
+    background: #999;
+}
+
+.mypage .report_edit_detail .project_content {
+    padding: 10px;
+    margin-top: 10px;
+    max-width: 700px;
+
+}
+
+/*************** Mypage Message *****************/
+.mypage .message_box_menu {
+    margin-bottom: 10px;
+    display: table;
+    width: 100%;
+}
+
+.mypage .message_box_menu div {
+    display: table-cell;
+    width: 33%;
+    text-align: center;
+}
+
+.mypage .message_box_menu div p {
+    padding: 5px;
+    margin: 0;
+}
+
+.mypage .message_box_menu div.active p {
+    background: #eee;
+    border-radius: 20px;
+}
+
+.mypage .message {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.mypage .message_content {
+    padding: 10px 0;
+}
+
+.mypage #reply_form {
+    padding: 10px 0;
+}
+
+.mypage tr.no_read {
+    background: #fee;
+}
+
+.mypage tr.no_read td {
+    border: 1px solid #f99;
+}
+
+/*************** Mypage ソーシャル連携    *****************/
+.mypage .social_box {
+    padding: 10px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.mypage .social_box div {
+    margin: 10px 0 20px 0;
+}
+
+/*************** Mypage コメント一覧    *****************/
+.mypage .mypage_comment {
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+    margin: 10px auto;
+}
+
+.mypage .mypage_comment .date {
+    font-weight: bold;
+}
+
+/*************** Mypage Money Plan    *****************/
+.money_plan {
+    padding: 10px;
+}
+
+.money_plan .year_month {
+    display: table;
+    width: 100%;
+    max-width: 400px;
+    margin: 10px auto 20px auto;
+}
+
+.money_plan .year_select,
+.money_plan .month_select,
+.money_plan .year_str,
+.money_plan .month_str {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.money_plan .money_plan_table th {
+    background: #f2f2f2;
+    border-color: #999;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.money_plan .money_plan_table td {
+    border-color: #999;
+}
+
+.money_plan .money_plan_table tr.total_price th {
+    background: #cef;
+    color: #000;
+}
+
+/*************** Mypage User edit  *****************/
+#preview_img img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+}

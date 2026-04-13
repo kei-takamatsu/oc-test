@@ -1,0 +1,155 @@
+/*************** Grid *****************/
+.grid_wrap_report {
+    width: 100%;
+    max-width: 410px;
+    padding: 5px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.grid_report {
+    max-width: 100%;
+    position: relative;
+    cursor: pointer;
+    border-radius: 0px;
+}
+
+.grid_report.no_url {
+    cursor: default;
+}
+
+.grid_report:before {
+    background: url('../img/black_alpha.png');
+    content: "";
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    height: 100%;
+    border-radius: 0px;
+}
+
+.grid_report:hover:before {
+    background: url('../img/black_alpha30.png');
+
+}
+
+.grid_report a.btn,
+.grid_report a.btn:hover,
+.grid_string_report .grid_title_report a,
+.grid_string_report .grid_title_report a:hover {
+    color: #fff;
+}
+
+.grid_report .imgholder img {
+    max-width: 100%;
+    border-radius: 0px;
+}
+
+.grid_footer_report {
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 10px;
+    padding-left: 10px;
+}
+
+.grid_report h2 {
+    font-size: 16px;
+    margin: 5px 0;
+    padding: 10px 10px 0 10px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.grid_report h2 a {
+    color: #fff;
+}
+
+.report_box_header {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    color: #eee;
+    padding: 0;
+    margin: 0;
+}
+
+.report_box_footer {
+    position: absolute;
+    bottom: 10px;
+    left: 0px;
+    width: 100%;
+    color: #eee;
+    padding: 0 0px 0 0;
+    margin: 0;
+}
+
+.report_date {
+    font-size: 13px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.grid_string_report .left {
+    float: left;
+    width: 220px;
+}
+
+.grid_string_report .right {
+    float: right;
+    padding-right: 5px;
+}
+
+.grid_report .user_img img {
+    border: 3px solid #fff;
+}
+
+.grid_report .project_name {
+    font-weight: bold;
+    padding: 10px;
+    font-size: 12px;
+}
+
+.grid_report .open_label {
+    margin: 30px 30px 0 0;
+}
+
+/****** buttons ******/
+.grid_wrap_report .buttons {
+    width: 100%;
+    max-width: 410px;
+    margin: 0 auto;
+}
+
+.grid_wrap_report .buttons .left,
+.grid_wrap_report .buttons .right {
+    float: left;
+    width: 50%;
+}
+
+/******** center *********/
+.center .grid_report {
+    margin-bottom: 10px;
+}
+
+@media screen and (min-width: 700px) {
+    #grid_container_report {
+        margin: 0 auto;
+    }
+
+    .grid_wrap_report {
+        padding: 5px 0 5px 10px;
+    }
+
+    .grid_report, .grid_wrap_report {
+        width: 410px;
+        float: left;
+    }
+
+    /******** center *********/
+    .center {
+        float: none;
+    }
+
+}
