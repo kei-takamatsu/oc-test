@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  nickname         String   @map("nick_name")
+  name             String?
+  email            String   @unique
+  password         String
+  sex              String?
+  address          String?
+  birthday         DateTime?
+  selfDescription  String?  @map("self_description")
+  receiveAddress   String?  @map("receive_address")
+  twitterId        String?  @map("twitter_id")
+  facebookId       String?  @map("facebook_id")
+  active           Boolean  @default(true)
+  loginTryCount    Int      @default(0) @map("login_try_count")
+  
+  projects         Project[]
+  backedProjects   BackedProject[]
+  comments         Comment[]
+  messagesSent     Message[]       @relation("SentMessages")
+  messagesReceived Message[]       @relation("ReceivedMessages")
+  
+  createdAt        DateTime @default(now()) @map("created")
+  updatedAt        DateTime @updatedAt @map("modified")
+
+  @@map("users")
+}
+
+model Project {
+  id                  Int      @id @default(autoincrement())
+  projectName         String   @map("project_name")
+  categoryId          Int?     @map("category_id")
+  areaId              Int?     @map("area_id")
+  description         String  
+  goalAmount          Int      @map("goal_amount")
+  collectedAmount     Int      @default(0) @map("collected_amount")
+  collectionTerm      Int      @default(60) @map("collection_term")
+  collectionStartDate DateTime? @map("collection_start_date")
+  collectionEndDate   DateTime? @map("collection_end_date")
+  opened              String   @default("no") // "no", "yes"
+  active              String   @default("yes")
+  backers             Int      @default(0)
+  
+  ownerId             Int      @map("user_id")
+  owner               User     @relation(fields: [ownerId], references: [id])
+  
+  backingLevels       BackingLevel[]
+  backedProjects      BackedProject[]
+  comments            Comment[]
+  reports             Report[]
+  
+  createdAt           DateTime @default(now()) @map("created")
+  updatedAt           DateTime @updatedAt @map("modified")
+
+  @@map("projects")
+}
+
+model BackingLevel {
+  id            Int      @id @default(autoincrement())
+  projectId     Int      @map("project_id")
+  project       Project  @relation(fields: [projectId], references: [id])
+  name          String
+  investAmount  Int      @map("invest_amount")
+  returnAmount  String   @map("return_amount")
+  maxCount      Int?     @map("max_count")
+  nowCount      Int      @default(0) @map("now_count")
+  delivery      Int      @default(1) // 1:メール, 2:郵送E 3:対面
+  
+  backedProjects BackedProject[]
+  
+  createdAt     DateTime @default(now()) @map("created")
+  updatedAt     DateTime @updatedAt @map("modified")
+
+  @@map("backing_levels")
+}
+
+model BackedProject {
+  id              Int      @id @default(autoincrement())
+  projectId       Int      @map("project_id")
+  project         Project  @relation(fields: [projectId], references: [id])
+  userId          Int      @map("user_id")
+  user            User     @relation(fields: [userId], references: [id])
+  backingLevelId  Int      @map("backing_level_id")
+  backingLevel    BackingLevel @relation(fields: [backingLevelId], references: [id])
+  
+  investAmount    Int      @map("invest_amount")
+  comment         String? 
+  status          String   @default("pending") // pending, authorized, captured, canceled
+  
+  // Stripe integration
+  stripePaymentId String?  @map("stripe_payment_id")
+  
+  createdAt       DateTime @default(now()) @map("created")
+  updatedAt       DateTime @updatedAt @map("modified")
+
+  @@map("backed_projects")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  projectId Int      @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id])
+  content   String   @map("comment")
+  createdAt DateTime @default(now()) @map("created")
+
+  @@map("comments")
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  projectId Int      @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id])
+  title     String
+  open      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created")
+  updatedAt DateTime @updatedAt @map("modified")
+
+  @@map("reports")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  fromId     Int      @map("from_id")
+  from       User     @relation("SentMessages", fields: [fromId], references: [id])
+  toId       Int      @map("to_id")
+  to         User     @relation("ReceivedMessages", fields: [toId], references: [id])
+  content    String  
+  createdAt  DateTime @default(now()) @map("created")
+
+  @@map("messages")
+}
