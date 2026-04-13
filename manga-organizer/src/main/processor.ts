@@ -164,7 +164,7 @@ export class MangaProcessor {
     outputBaseDir: string, 
     extractPath: string,
     options: ProcessOptions, 
-    targetAspect: number
+    _targetAspect: number
   ): Promise<string[]> {
     // 1. First pass: Trim to find the actual content area
     // Use the threshold from options
