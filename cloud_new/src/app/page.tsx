@@ -1,30 +1,53 @@
-import { ArrowRight, Globe, Lock, Rocket, TrendingUp } from "lucide-react";
+import { ArrowRight, Globe, Lock, Rocket, TrendingUp, Zap, Shield } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import ProjectCard from "@/components/ProjectCard";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ query?: string; categoryId?: string; areaId?: string; sort?: string }>;
+}) {
+  const { query, categoryId, areaId, sort } = await searchParams;
+
+  const session = await auth();
+  const currentUserId = session?.user?.id ? parseInt(session.user.id) : null;
+
+  // カテゴリとエリアのマスターデータを取得
+  const [categories, areas, projects] = await Promise.all([
+    prisma.category.findMany(),
+    prisma.area.findMany(),
+    prisma.project.findMany({
+      where: {
+        opened: "yes",
+        AND: [
+          query ? { projectName: { contains: query } } : {},
+          categoryId ? { categoryId: parseInt(categoryId) } : {},
+          areaId ? { areaId: parseInt(areaId) } : {},
+        ],
+      },
+      include: {
+        category: true,
+        area: true,
+        favorites: currentUserId ? { where: { userId: currentUserId } } : false,
+      },
+      orderBy: sort === 'funded' ? { collectedAmount: 'desc' as const }
+             : sort === 'ending' ? { collectionEndDate: 'asc' as const }
+             : sort === 'popular' ? { backers: 'desc' as const }
+             : { createdAt: 'desc' as const },
+      take: 12,
+    }),
+  ]);
+
   return (
-    <div className="flex flex-col gap-20 pb-20">
+    <div className="flex flex-col gap-12 pb-20">
       {/* ヒーローセクション */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        {/* 背景の装飾画像 */}
+      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
         <div className="absolute top-0 right-0 w-2/3 h-full opacity-20 dark:opacity-40 -z-10 blur-3xl">
           <img src="/hero.png" alt="" className="w-full h-full object-cover rounded-full" />
         </div>
         
         <div className="container mx-auto text-center space-y-8 relative z-10">
-          <div className="flex justify-center mb-8">
-            <img 
-              src="/hero.png" 
-              alt="CloudNew Vision" 
-              className="w-full max-w-2xl rounded-3xl shadow-2xl shadow-indigo-500/20 glass p-2 hover:scale-[1.02] transition-transform duration-500"
-            />
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-semibold text-indigo-400">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            Next Generation Platform
-          </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight">
             あなたの夢に、<br />
             <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
@@ -34,64 +57,91 @@ export default function Home() {
           <p className="max-w-2xl mx-auto text-lg text-slate-500 dark:text-slate-400 leading-relaxed">
             CloudNewは、革新的なアイデアと熱狂的な支援者を結びつける、次世代のクラウドファンディング・プラットフォームです。
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="px-8 py-4 bg-primary text-white rounded-full font-bold shadow-xl shadow-indigo-500/20 hover-subtle flex items-center justify-center gap-2">
-              プロジェクトを探す <ArrowRight size={20} />
-            </button>
-            <button className="px-8 py-4 glass rounded-full font-bold hover:bg-white/5 transition-colors">
-              詳細を見る
-            </button>
+
+          {/* 検索・絞り込みバー */}
+          <div className="max-w-4xl mx-auto glass p-2 rounded-[2rem] shadow-2xl flex flex-col md:flex-row gap-2 mt-12">
+            <form action="/" className="flex-grow flex flex-col md:flex-row gap-2 w-full">
+              <input 
+                name="query"
+                defaultValue={query}
+                placeholder="プロジェクト名で検索..."
+                className="flex-grow bg-white/5 border-none px-6 py-4 rounded-2xl focus:ring-2 focus:ring-primary outline-none"
+              />
+              <div className="flex gap-2">
+                <select 
+                  name="categoryId" 
+                  defaultValue={categoryId}
+                  className="bg-white/5 border-none px-4 py-4 rounded-2xl focus:ring-2 focus:ring-primary outline-none text-sm min-w-[120px]"
+                >
+                  <option value="">すべてのカテゴリ</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <select 
+                  name="areaId" 
+                  defaultValue={areaId}
+                  className="bg-white/5 border-none px-4 py-4 rounded-2xl focus:ring-2 focus:ring-primary outline-none text-sm min-w-[120px]"
+                >
+                  <option value="">すべてのエリア</option>
+                  {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              <button className="bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/20 hover-subtle">
+                検索
+              </button>
+            </form>
           </div>
         </div>
       </section>
 
-      {/* 注目プロジェクトセクション */}
+      {/* プロジェクト一覧セクション */}
       <section className="container mx-auto px-4 space-y-12">
         <div className="flex items-end justify-between">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold">注目プロジェクト</h2>
-            <p className="text-slate-500">今、最も熱い注目を集めているプロジェクトをご紹介します。</p>
+            <h2 className="text-3xl font-bold">
+              {query || categoryId || areaId ? "検索結果" : "注目プロジェクト"}
+            </h2>
+            <p className="text-slate-500">
+              {projects.length} 件のプロジェクトが見つかりました
+            </p>
           </div>
-          <button className="text-primary font-semibold flex items-center gap-1 hover:underline">
-            すべて見る <ArrowRight size={16} />
-          </button>
+          <div className="flex gap-2">
+            {[
+              { key: '', label: '新着順' },
+              { key: 'funded', label: '支援額順' },
+              { key: 'popular', label: '人気順' },
+              { key: 'ending', label: '終了間近' },
+            ].map(s => (
+              <a
+                key={s.key}
+                href={`/?${new URLSearchParams({ ...(query ? {query} : {}), ...(categoryId ? {categoryId} : {}), ...(areaId ? {areaId} : {}), ...(s.key ? {sort: s.key} : {}) }).toString()}`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  (sort || '') === s.key
+                    ? 'bg-primary text-white shadow-lg shadow-indigo-500/20'
+                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                {s.label}
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="group glass rounded-3xl overflow-hidden hover-subtle flex flex-col">
-              <div className="h-48 bg-slate-800 relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="px-2 py-1 rounded-md bg-indigo-500 text-[10px] font-bold text-white uppercase tracking-wider">
-                    Technology
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 space-y-4 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                  革新的なスマート・クリスタルデバイスの開発
-                </h3>
-                <p className="text-sm text-slate-500 line-clamp-2">
-                  人々の生活をより豊かに、よりスマートにする次世代のデバイスを目指しています。
-                </p>
-                <div className="space-y-2 pt-4 mt-auto">
-                  <div className="flex justify-between text-xs font-medium">
-                    <span>達成率 75%</span>
-                    <span>残り 12日</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-[75%]" />
-                  </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="font-bold">¥1,500,000</span>
-                    <span className="text-xs text-slate-400">234人の支援者が応援中</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projects.map((project) => (
+              <ProjectCard 
+                key={project.id} 
+                {...project} 
+                initialIsFavorite={project.favorites?.length > 0}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="glass p-20 rounded-[3rem] text-center space-y-4">
+            <p className="text-xl text-slate-500">該当するプロジェクトが見つかりませんでした。</p>
+            <a href="/" className="inline-block text-primary font-bold hover:underline">条件をクリアする</a>
+          </div>
+        )}
       </section>
 
       {/* 価値提案セクション */}
@@ -124,6 +174,54 @@ export default function Home() {
             </div>
             <h4 className="font-bold">最速入金</h4>
             <p className="text-sm text-slate-500">プロジェクト終了後、業界最速水準での入金振込を実現しました。</p>
+          </div>
+        </div>
+      </section>
+      {/* 特長セクション */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center space-y-4 mb-16">
+          <h2 className="text-3xl font-bold">CloudNew が選ばれる理由</h2>
+          <p className="text-slate-500">最高峰の体験を、すべてのクリエイターと支援者に。</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { icon: <Zap className="text-yellow-400" />, title: "圧倒的なスピード", desc: "アイデアの公開から支援の受け取りまで、ストレスのない迅速なプロセスを提供。" },
+            { icon: <Shield className="text-emerald-400" />, title: "信頼のセキュリティ", desc: "すべての取引は高度に暗号化され、厳正な審査を通過したプロジェクトのみを掲載。" },
+            { icon: <Globe className="text-blue-400" />, title: "グローバルな繋がり", desc: "場所を問わず、世界中の熱狂的な支援者とあなたのアイデアを共有可能。" },
+          ].map((feature, i) => (
+            <div key={i} className="glass p-8 rounded-[2rem] space-y-4 hover:bg-white/5 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold">{feature.title}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ご利用の流れ */}
+      <section className="bg-white/5 py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-4 mb-20">
+            <h2 className="text-3xl font-bold">ご利用の流れ</h2>
+            <p className="text-slate-500">わずか3つのステップで、あなたの夢をカタチに。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+            <div className="hidden md:block absolute top-10 left-1/4 right-1/4 h-0.5 border-t-2 border-dashed border-white/10 -z-10" />
+            {[
+              { step: "01", title: "プロジェクト作成", desc: "アイデアを入力し、魅力的なリターンを設定して公開します。" },
+              { step: "02", title: "支援を集める", desc: "SNSなどでシェアし、共感してくれる支援者を募ります。" },
+              { step: "03", title: "夢を実現する", desc: "目標達成後、集まった資金でプロジェクトを実行に移します。" },
+            ].map((item, i) => (
+              <div key={i} className="text-center space-y-6">
+                <div className="w-20 h-20 rounded-full bg-primary mx-auto flex items-center justify-center text-2xl font-black shadow-2xl shadow-indigo-500/40">
+                  {item.step}
+                </div>
+                <h3 className="text-xl font-bold">{item.title}</h3>
+                <p className="text-sm text-slate-500 max-w-[250px] mx-auto">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
