@@ -129,7 +129,13 @@ app.whenReady().then(() => {
                   url.includes('tiktok.com') || 
                   url.includes('facebook.com') || 
                   url.includes('twitter.com') || 
-                  url.includes('x.com')
+                  url.includes('x.com') ||
+                  url.includes('cookpad.com') ||
+                  url.includes('kurashiru.com') ||
+                  url.includes('delishkitchen.tv') ||
+                  url.includes('oceans-nadia.com') ||
+                  url.includes('macaro-ni.jp') ||
+                  url.includes('park.ajinomoto.co.jp')
                   
     let scrapedData: Partial<Recipe>
 
@@ -299,8 +305,8 @@ async function extractWithBrowserWindow(url: string, apiKey: string): Promise<Pa
 
     let timeout = setTimeout(() => {
       hiddenWindow.destroy()
-      reject(new Error('Timeout loading page'))
-    }, 15000)
+      reject(new Error('Timeout loading page (30s)'))
+    }, 30000)
 
     hiddenWindow.webContents.on('did-finish-load', async () => {
       clearTimeout(timeout)

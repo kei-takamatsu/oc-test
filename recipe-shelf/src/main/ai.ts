@@ -75,7 +75,14 @@ ${text}
           throw new Error("AI did not return any text.")
       }
 
-      const parsedData = JSON.parse(responseText)
+      let cleanText = responseText.trim()
+      if (cleanText.startsWith('```json')) {
+        cleanText = cleanText.replace(/^```json\n?/, '').replace(/```$/, '').trim()
+      } else if (cleanText.startsWith('```')) {
+        cleanText = cleanText.replace(/^```\n?/, '').replace(/```$/, '').trim()
+      }
+
+      const parsedData = JSON.parse(cleanText)
 
       return {
         title: parsedData.title || 'タイトルなしのレシピ',
