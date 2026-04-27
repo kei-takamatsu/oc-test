@@ -8,6 +8,8 @@
   --color-morning-foreground: hsl(45 30% 20%);
   --color-evening: hsl(260 80% 80%);
   --color-evening-foreground: hsl(260 30% 20%);
+  --color-money: hsl(40 100% 80%);
+  --color-money-foreground: hsl(40 50% 30%);
   --radius-lg: 1.5rem;
 }
 
@@ -20,6 +22,9 @@
   
   --evening: 260 80% 80%;
   --evening-foreground: 260 30% 20%;
+
+  --money: 40 100% 80%;
+  --money-foreground: 40 50% 30%;
   
   --background: 210 40% 98%;
   --foreground: 222 47% 11%;

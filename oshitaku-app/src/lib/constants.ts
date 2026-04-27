@@ -1,13 +1,21 @@
 // No imports needed
 
-export type TaskTime = 'morning' | 'evening';
+export type TaskTime = 'morning' | 'evening' | 'money';
 
 export interface Task {
   id: string;
   text: string;
   icon: string;
-  time: TaskTime;
+  time: Exclude<TaskTime, 'money'>;
   done: boolean;
+}
+
+export interface Transaction {
+  id: string;
+  type: 'expense' | 'income';
+  name: string;
+  amount: number;
+  date: string;
 }
 
 export const INITIAL_TASKS: Task[] = [

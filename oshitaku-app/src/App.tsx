@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, Calendar as CalendarIcon, Settings, User as UserIcon, ChevronLeft, CheckCircle2, Trash2, Lock } from 'lucide-react';
+import { Sun, Moon, Calendar as CalendarIcon, Settings, User as UserIcon, ChevronLeft, CheckCircle2, Trash2, Lock, Wallet, Coins } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TaskCard } from './components/TaskCard';
 import { AuthForm } from './components/AuthForm';
 import { Calendar } from './components/Calendar';
+import { PocketMoney } from './components/PocketMoney';
 import { INITIAL_TASKS, getDisplayDate, getTodayKey, getInitialTab } from './lib/constants';
 import { supabase, isMockMode } from './lib/supabase';
-import type { Task, TaskTime } from './lib/constants';
+import type { Task, TaskTime, Transaction } from './lib/constants';
 import confetti from 'canvas-confetti';
 
 const EMOJI_LIST = ['✨', '💦', '🪥', '👕', '🚽', '🍙', '🧼', '🛁', '🛏️', '📚', '🎒', '👟', '✏️', '🐶', '⚽'];
@@ -23,6 +24,12 @@ const AppContent: React.FC = () => {
   const [newTaskText, setNewTaskText] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('✨');
   const [selectedDate, setSelectedDate] = useState<string>(getTodayKey());
+  
+  // お小遣い関連の状態
+  const [initialBalance, setInitialBalance] = useState<number>(0);
+  const [dailyTransactions, setDailyTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [totalBalance, setTotalBalance] = useState<number>(0);
   
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -78,7 +85,7 @@ const AppContent: React.FC = () => {
         // Supabaseからプロファイルを読み込み
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('display_name, history')
+          .select('display_name, history, initial_balance')
           .eq('id', user.id)
           .single();
 
@@ -87,24 +94,29 @@ const AppContent: React.FC = () => {
         if (data) {
           if (data.display_name) setUserName(data.display_name);
           if (data.history) setHistory(data.history as Record<string, { morning: boolean; evening: boolean }>);
+          if (data.initial_balance !== undefined) setInitialBalance(data.initial_balance);
           
           // ローカルストレージも同期しておく（オフライン対応用）
           localStorage.setItem(`oshitaku_user_name_${user.email}`, data.display_name || '');
           localStorage.setItem(`oshitaku_history_${user.email}`, JSON.stringify(data.history));
+          localStorage.setItem(`oshitaku_initial_balance_${user.email}`, String(data.initial_balance || 0));
         } else {
           // データがない場合は移行を試みる
           const localName = localStorage.getItem(`oshitaku_user_name_${user.email}`) || user.user_metadata?.full_name || 'ゲスト';
           const localHistoryStr = localStorage.getItem(`oshitaku_history_${user.email}`);
           const localHistory = localHistoryStr ? JSON.parse(localHistoryStr) : {};
+          const localInitialBalance = parseInt(localStorage.getItem(`oshitaku_initial_balance_${user.email}`) || '0');
           
           setUserName(localName);
           setHistory(localHistory);
+          setInitialBalance(localInitialBalance);
           
           // Supabaseへ初回保存（移行）
           await supabase.from('user_profiles').upsert({
             id: user.id,
             display_name: localName,
-            history: localHistory
+            history: localHistory,
+            initial_balance: localInitialBalance
           });
         }
       } catch (err) {
@@ -113,6 +125,88 @@ const AppContent: React.FC = () => {
     };
     loadCommonData();
   }, [user, authLoading]);
+
+  // 全取引データの読み込み（総資産計算用）
+  useEffect(() => {
+    const loadAllTransactions = async () => {
+      if (authLoading) return;
+      
+      const userKey = user?.email || 'guest';
+
+      if (isMockMode || !user) {
+        const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+        const data = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+        setAllTransactions(data);
+        const total = data.reduce((acc: number, t: any) => {
+          return t.type === 'income' ? acc + Number(t.amount) : acc - Number(t.amount);
+        }, Number(initialBalance));
+        setTotalBalance(total);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_transactions')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        
+        if (data) {
+          setAllTransactions(data as Transaction[]);
+          const total = data.reduce((acc, t) => {
+            return t.type === 'income' ? acc + Number(t.amount) : acc - Number(t.amount);
+          }, Number(initialBalance));
+          setTotalBalance(total);
+        }
+      } catch (err) {
+        console.error('Error loading all transactions from Supabase, using local fallback:', err);
+        const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+        const data = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+        const total = data.reduce((acc: number, t: any) => {
+          return t.type === 'income' ? acc + Number(t.amount) : acc - Number(t.amount);
+        }, Number(initialBalance));
+        setTotalBalance(total);
+      }
+    };
+    loadAllTransactions();
+  }, [user, authLoading, initialBalance, dailyTransactions]);
+
+  // 選択された日付の取引データの読み込み
+  useEffect(() => {
+    const loadDailyTransactions = async () => {
+      if (authLoading) return;
+      
+      const userKey = user?.email || 'guest';
+      const targetDate = selectedDate;
+
+      if (isMockMode || !user) {
+        const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+        const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+        const dailyData = allData.filter((t: any) => t.date === targetDate);
+        setDailyTransactions(dailyData);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('date', targetDate);
+        
+        if (error) throw error;
+        setDailyTransactions(data || []);
+      } catch (err) {
+        console.error('Error loading daily transactions from Supabase, using local fallback:', err);
+        const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+        const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+        const dailyData = allData.filter((t: any) => t.date === targetDate);
+        setDailyTransactions(dailyData);
+      }
+    };
+    loadDailyTransactions();
+  }, [user, authLoading, selectedDate]);
 
   // 選択された日付のタスク読み込みと移行
   useEffect(() => {
@@ -152,7 +246,7 @@ const AppContent: React.FC = () => {
             user_id: user.id,
             date: targetDate,
             tasks: tasksToSet
-          });
+          }, { onConflict: 'user_id,date' });
         }
       } catch (err) {
         console.error('Error loading tasks:', err);
@@ -208,7 +302,7 @@ const AppContent: React.FC = () => {
             user_id: user.id,
             date: targetDate,
             tasks: updatedTasks
-          }),
+          }, { onConflict: 'user_id,date' }),
           supabase.from('user_profiles').upsert({
             id: user.id,
             display_name: userName,
@@ -218,6 +312,90 @@ const AppContent: React.FC = () => {
       } catch (err) {
         console.error('Error saving to Supabase:', err);
       }
+    }
+  };
+
+  const handleAddTransaction = async (name: string, amount: number, type: 'expense' | 'income') => {
+    const userKey = user?.email || 'guest';
+    const targetDate = selectedDate;
+    
+    const newTransaction = {
+      id: Math.random().toString(36).substr(2, 9),
+      user_id: user?.id || 'guest',
+      date: targetDate,
+      name,
+      amount,
+      type
+    };
+
+    if (isMockMode || !user) {
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      const updatedAllData = [...allData, newTransaction];
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify(updatedAllData));
+      setDailyTransactions([...dailyTransactions, newTransaction]);
+      return;
+    }
+
+    try {
+      // Supabaseにはidを含めずに送信し、自動採番（UUID）させる
+      const { id: _localId, ...dbTransaction } = newTransaction;
+      const { data, error } = await supabase
+        .from('user_transactions')
+        .insert(dbTransaction)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // 成功した場合でもローカルに保存しておく（オフライン時のキャッシュとして）
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify([...allData, data]));
+      
+      setDailyTransactions([...dailyTransactions, data]);
+    } catch (err) {
+      console.error('Error adding transaction to Supabase, saving to local fallback:', err);
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify([...allData, newTransaction]));
+      setDailyTransactions([...dailyTransactions, newTransaction]);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    if (!window.confirm('この きろくを けしても いいかな？')) return;
+    const userKey = user?.email || 'guest';
+
+    if (isMockMode || !user) {
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      const updatedAllData = allData.filter((t: any) => t.id !== id);
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify(updatedAllData));
+      setDailyTransactions(dailyTransactions.filter(t => t.id !== id));
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('user_transactions')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // ローカルストレージからも削除
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify(allData.filter((t: any) => t.id !== id)));
+      
+      setDailyTransactions(dailyTransactions.filter(t => t.id !== id));
+    } catch (err) {
+      console.error('Error deleting transaction from Supabase, removing from local fallback:', err);
+      const savedAllTransactions = localStorage.getItem(`all_transactions_${userKey}`);
+      const allData = savedAllTransactions ? JSON.parse(savedAllTransactions) : [];
+      localStorage.setItem(`all_transactions_${userKey}`, JSON.stringify(allData.filter((t: any) => t.id !== id)));
+      setDailyTransactions(dailyTransactions.filter(t => t.id !== id));
     }
   };
 
@@ -250,7 +428,7 @@ const AppContent: React.FC = () => {
           user_id: user.id,
           date: targetDate,
           tasks: updatedTasks
-        });
+        }, { onConflict: 'user_id,date' });
       } catch (err) {
         console.error('Error adding task to Supabase:', err);
       }
@@ -271,7 +449,7 @@ const AppContent: React.FC = () => {
           user_id: user.id,
           date: targetDate,
           tasks: updatedTasks
-        });
+        }, { onConflict: 'user_id,date' });
       } catch (err) {
         console.error('Error deleting task from Supabase:', err);
       }
@@ -377,7 +555,7 @@ const AppContent: React.FC = () => {
         <div className="flex p-1 bg-slate-100 rounded-2xl relative">
           <motion.div
             layoutId="tab-bg"
-            className={`absolute inset-1 rounded-xl shadow-sm ${activeTab === 'morning' ? 'bg-morning' : 'bg-evening'}`}
+            className={`absolute inset-1 rounded-xl shadow-sm ${activeTab === 'morning' ? 'bg-morning' : activeTab === 'evening' ? 'bg-evening' : 'bg-money'}`}
             transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
           />
           <button
@@ -394,37 +572,55 @@ const AppContent: React.FC = () => {
             <Moon className={`w-5 h-5 ${activeTab === 'evening' ? 'fill-current' : ''}`} />
             よる
           </button>
+          <button
+            onClick={() => setActiveTab('money')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl z-10 font-bold transition-colors ${activeTab === 'money' ? 'text-money-foreground' : 'text-slate-400'}`}
+          >
+            <Coins className={`w-5 h-5 ${activeTab === 'money' ? 'fill-current' : ''}`} />
+            おかね
+          </button>
         </div>
 
-        <div className="mt-6">
-          <div className="flex justify-between text-sm font-bold text-slate-400 mb-2 uppercase tracking-wider">
-            <span>どれくらい できたかな？</span>
-            <span>{Math.round(progress)}%</span>
+        {activeTab !== 'money' && (
+          <div className="mt-6">
+            <div className="flex justify-between text-sm font-bold text-slate-400 mb-2 uppercase tracking-wider">
+              <span>どれくらい できたかな？</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                className={`h-full ${activeTab === 'morning' ? 'bg-morning' : 'bg-evening'}`}
+              />
+            </div>
           </div>
-          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              className={`h-full ${activeTab === 'morning' ? 'bg-morning' : 'bg-evening'}`}
-            />
-          </div>
-        </div>
+        )}
       </header>
 
       <main className="p-6">
-        <div className="grid gap-4">
-          <AnimatePresence mode="popLayout">
-            {filteredTasks.map(task => (
-              <TaskCard 
-                key={task.id} 
-                task={task} 
-                onToggle={handleToggle} 
-                isMorning={activeTab === 'morning'} 
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-
+        {activeTab === 'money' ? (
+          <PocketMoney 
+            transactions={dailyTransactions}
+            onAddTransaction={handleAddTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            initialBalance={initialBalance}
+            totalBalance={totalBalance}
+          />
+        ) : (
+          <div className="grid gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredTasks.map(task => (
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onToggle={handleToggle} 
+                  isMorning={activeTab === 'morning'} 
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
       </main>
 
       <AnimatePresence>
@@ -447,7 +643,17 @@ const AppContent: React.FC = () => {
                 <div className="w-12 h-12" /> {/* Layout balancer */}
               </header>
               <div className="p-4 -mt-16">
-                <Calendar history={history} onDateClick={handleCalendarDateClick} />
+                <Calendar 
+                  history={history} 
+                  onDateClick={(date) => {
+                    setSelectedDate(date);
+                    setActiveTab('morning');
+                    setShowHistory(false);
+                  }} 
+                  allTransactions={allTransactions}
+                  initialBalance={initialBalance}
+                  totalBalance={totalBalance}
+                />
               </div>
             </div>
           </motion.div>
@@ -512,6 +718,59 @@ const AppContent: React.FC = () => {
                       登録アドレス: {user.email}
                     </div>
                   )}
+                </div>
+
+                {/* はじめの お金 */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Wallet className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-widest">はじめの お金（全財産）</span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">¥</span>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={initialBalance === 0 ? '' : initialBalance.toString()}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const rawVal = e.target.value.replace(/[^0-9]/g, '');
+                          const val = parseInt(rawVal) || 0;
+                          setInitialBalance(val);
+                        }}
+                        className="flex-1 bg-slate-50 border-none rounded-2xl p-4 pl-8 text-slate-700 font-bold placeholder:text-slate-300 focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        placeholder="はじめに 持っていた お金"
+                      />
+                      <button
+                        onClick={async () => {
+                          const userKey = user?.email || 'guest';
+                          localStorage.setItem(`oshitaku_initial_balance_${userKey}`, String(initialBalance));
+                          
+                          if (!isMockMode && user) {
+                            try {
+                              await supabase.from('user_profiles').upsert({
+                                id: user.id,
+                                display_name: userName,
+                                history: history,
+                                initial_balance: initialBalance
+                              });
+                              alert('ほぞんしました！');
+                            } catch (err) {
+                              console.error('Error updating initial balance in Supabase:', err);
+                              alert('ほぞんに しっぱいしました...');
+                            }
+                          } else {
+                            alert('ほぞんしました！（ローカル）');
+                          }
+                        }}
+                        className="px-6 bg-slate-900 text-white font-bold rounded-2xl active:scale-95 transition-all"
+                      >
+                        ほぞん
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* あたらしい おしたく */}
