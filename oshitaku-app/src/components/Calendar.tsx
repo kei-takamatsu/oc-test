@@ -15,6 +15,7 @@ interface CalendarProps {
 export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTransactions = [], initialBalance = 0, totalBalance = 0 }) => {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const graphContainerRef = React.useRef<HTMLDivElement>(null);
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -31,6 +32,21 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
   const month = currentDate.getMonth();
   const days = daysInMonth(year, month);
   const offset = firstDayOfMonth(year, month);
+
+  React.useEffect(() => {
+    if (graphContainerRef.current) {
+      const today = new Date();
+      if (today.getFullYear() === year && today.getMonth() === month) {
+        // Center the scroll roughly on the current day
+        const currentDay = today.getDate();
+        const scrollPosition = Math.max(0, (currentDay - 3) * 56);
+        // Timeout ensures the elements are rendered and measurements are correct
+        setTimeout(() => {
+          graphContainerRef.current?.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [year, month, currentDate]);
 
   const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -100,8 +116,8 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
         </div>
         
         {/* お小遣いサマリー */}
-        <div className="col-span-2 pt-4 mt-2 border-t border-slate-100 flex justify-between items-center px-2">
-          <div className="flex gap-4">
+        <div className="col-span-2 pt-4 mt-2 border-t border-slate-100 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-4 items-center">
             <div className="flex flex-col">
               <span className="text-[10px] font-bold text-slate-400">こんげつの しゅうし</span>
               <span className={`text-xl font-black ${monthlyBalance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -115,12 +131,13 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
               </span>
             </div>
           </div>
-          <div className="flex gap-4">
-            <div className="flex flex-col text-right">
+          
+          <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-2xl">
+            <div className="flex flex-col">
               <span className="text-[10px] font-bold text-slate-400">もらった</span>
               <span className="text-sm font-bold text-emerald-500">+¥{monthlyIncome.toLocaleString()}</span>
             </div>
-            <div className="flex flex-col text-right">
+            <div className="flex flex-col">
               <span className="text-[10px] font-bold text-slate-400">つかった</span>
               <span className="text-sm font-bold text-rose-500">-¥{monthlyExpense.toLocaleString()}</span>
             </div>
@@ -149,7 +166,7 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
           <h3 className="font-bold text-purple-600">つきべつの グラフ</h3>
         </div>
         
-        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide snap-x">
+        <div ref={graphContainerRef} className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide snap-x">
           {graphData.map(data => (
             <div key={data.date} className="flex flex-col items-center gap-2 flex-shrink-0 snap-start">
               <div className="h-24 w-12 bg-slate-50 rounded-xl relative overflow-hidden">
@@ -204,6 +221,7 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
           const d = i + 1;
           const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
           const dayStatus = history[key];
+          const hasTransaction = allTransactions.some(t => t.date === key);
           
           return (
             <div 
@@ -211,17 +229,18 @@ export const Calendar: React.FC<CalendarProps> = ({ history, onDateClick, allTra
               onClick={() => onDateClick?.(key)}
               className={`aspect-square flex flex-col items-center justify-center relative rounded-2xl border cursor-pointer hover:bg-slate-50 transition-colors ${d === currentDate.getDate() ? 'border-purple-200' : 'border-slate-50 bg-white'}`}
             >
-              <span className={`text-xs font-bold z-10 ${dayStatus ? 'text-slate-800' : 'text-slate-400'}`}>
+              <span className={`text-xs font-bold z-10 ${dayStatus || hasTransaction ? 'text-slate-800' : 'text-slate-400'}`}>
                 {d}
               </span>
-              {dayStatus && (
+              {(dayStatus || hasTransaction) && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  {(dayStatus.morning && dayStatus.evening) && (
+                  {(dayStatus?.morning && dayStatus?.evening) && (
                     <div className="absolute inset-0 bg-purple-50 rounded-2xl -z-0 border border-purple-100" />
                   )}
                   <div className="flex gap-1 mt-6 z-10">
-                    {dayStatus.morning && <div className="w-1.5 h-1.5 rounded-full bg-morning" />}
-                    {dayStatus.evening && <div className="w-1.5 h-1.5 rounded-full bg-evening" />}
+                    {dayStatus?.morning && <div className="w-1.5 h-1.5 rounded-full bg-morning" />}
+                    {dayStatus?.evening && <div className="w-1.5 h-1.5 rounded-full bg-evening" />}
+                    {hasTransaction && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
                   </div>
                 </div>
               )}
