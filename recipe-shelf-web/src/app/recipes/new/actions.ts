@@ -71,13 +71,42 @@ export async function addRecipeFromUrl(formData: FormData) {
   const url = formData.get('url') as string
   if (!url) return
 
-  // スマホから登録されたURLを「保留状態」としてPCに拾わせるためのレコード
+  const scraperApiUrl = process.env.SCRAPER_API_URL
+  const scraperApiSecret = process.env.SCRAPER_API_SECRET
+
+  // スクレイピングAPIサーバーが設定されていれば直接呼ぶ
+  if (scraperApiUrl && scraperApiSecret) {
+    try {
+      const res = await fetch(`${scraperApiUrl}/api/scrape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${scraperApiSecret}`
+        },
+        body: JSON.stringify({ url, userId: user.id })
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(err.error || `API returned ${res.status}`)
+      }
+
+      // 成功 → レシピ一覧にリダイレクト
+      revalidatePath('/recipes')
+      redirect('/recipes')
+    } catch (e) {
+      console.error('[Scraper API] Error, falling back to PENDING_SCRAPE:', e)
+      // フォールスルー: APIが使えない場合はPCアプリに任せる
+    }
+  }
+
+  // フォールバック: PCアプリに任せる保留レコード
   const recipeData = {
     user_id: user.id,
     title: '🌐自動取得を待機中...',
     source_url: url,
     description: 'PCアプリを起動すると、裏側で自動的にレシピ内容と画像が抽出されます！',
-    notes: '[PENDING_SCRAPE]', // <- PENDING FLag
+    notes: '[PENDING_SCRAPE]',
     image_local_path: null,
     ingredients: JSON.stringify(['(自動取得されます)']),
     instructions: JSON.stringify(['(自動取得されます)'])
@@ -95,3 +124,4 @@ export async function addRecipeFromUrl(formData: FormData) {
   revalidatePath('/recipes')
   redirect('/recipes')
 }
+
