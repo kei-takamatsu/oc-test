@@ -257,7 +257,7 @@ app.whenReady().then(() => {
           }
           
           // Clear pending marker
-          scrapedData.notes = null
+          ;(scrapedData as any).notes = null
           await cloudDbService.updateRecipe(target.id, scrapedData as any)
           console.log('[Background Scraper] Successfully processed URL:', target.source_url)
           

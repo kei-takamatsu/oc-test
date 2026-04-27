@@ -45,6 +45,7 @@ export const scraperService = {
         } catch (e) {
           // ignore parse errors
         }
+        return true
       })
 
       if (!recipeData) {
