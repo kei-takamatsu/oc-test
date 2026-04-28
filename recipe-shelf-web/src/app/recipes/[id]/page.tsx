@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Clock, Users, Link as LinkIcon, ChefHat } from 'lucide-react'
+import DeleteButton from './DeleteButton'
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -34,10 +35,11 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="min-h-screen bg-white pb-24">
       {/* Top Nav (Floating) */}
-      <div className="absolute top-0 w-full z-10 p-4">
+      <div className="absolute top-0 w-full z-10 p-4 flex items-center justify-between">
         <Link href="/recipes" className="inline-flex items-center justify-center w-10 h-10 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-colors">
           <ChevronLeft size={24} />
         </Link>
+        <DeleteButton recipeId={recipe.id} />
       </div>
 
       {/* Hero Image */}
