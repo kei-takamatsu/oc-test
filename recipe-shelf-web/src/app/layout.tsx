@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "RecipeShelf - AIレシピ管理アプリ",
   description: "URLからAIが自動でレシピを解析・保存する、あなただけのレシピ棚。",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
