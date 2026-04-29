@@ -35,7 +35,7 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="min-h-screen bg-white pb-24">
       {/* Top Nav (Floating) */}
-      <div className="absolute top-0 w-full z-10 p-4 flex items-center justify-between">
+      <div className="absolute top-0 w-full z-30 p-4 flex items-center justify-between">
         <Link href="/recipes" className="inline-flex items-center justify-center w-10 h-10 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-black/50 transition-colors">
           <ChevronLeft size={24} />
         </Link>

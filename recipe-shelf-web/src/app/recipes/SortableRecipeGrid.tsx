@@ -79,6 +79,7 @@ export default function SortableRecipeGrid({ initialRecipes }: { initialRecipes:
 
   return (
     <DndContext 
+      id="recipe-grid-dnd-context"
       sensors={sensors} 
       collisionDetection={closestCenter} 
       onDragEnd={handleDragEnd}

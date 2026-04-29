@@ -31,10 +31,10 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
           </div>
           <div className="relative z-10">
             <h2 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
-              🌐 URLから自動解析（PC連携）
+              🌐 URLからAI自動解析
             </h2>
             <p className="text-sm text-orange-800 mb-4">
-              レシピのURLを入力すると、あとでPCアプリを開いたときに自動でスクレイピングしてレシピが完成します！外出先でのブックマークに最適です。
+              レシピのURLを入力すると、サーバーのAIが自動で内容を解析して数秒〜数十秒でレシピを完成させます！
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -48,7 +48,7 @@ export default async function NewRecipePage({ searchParams }: { searchParams: Pr
                 className="whitespace-nowrap px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl shadow-sm transition-colors active:scale-95 touch-manipulation"
                 loadingText="登録中..."
               >
-                あとで解析する
+                AIで自動取得
               </SubmitButton>
             </div>
           </div>
