@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "RecipeShelf - AIレシピ管理アプリ",
   description: "URLからAIが自動でレシピを解析・保存する、あなただけのレシピ棚。",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.png?v=2",
   },
 };
 
