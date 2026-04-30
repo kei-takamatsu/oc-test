@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   description: "URLからAIが自動でレシピを解析・保存する、あなただけのレシピ棚。",
   icons: {
     icon: "/favicon.png?v=2",
+    apple: "/apple-touch-icon.png",
   },
 };
 
