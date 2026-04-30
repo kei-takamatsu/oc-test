@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { LogOut, Clock } from 'lucide-react'
+import { User, Clock } from 'lucide-react'
 import { logout } from '../login/actions'
 import SearchInput from './SearchInput'
 import { ReloadButton } from './ReloadButton'
@@ -45,11 +45,9 @@ export default async function RecipesPage({ searchParams }: { searchParams: Prom
           <Link href="/recipes/new" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full font-bold transition-all active:scale-95 shadow-md">
             + 追加
           </Link>
-          <form action={logout}>
-            <button className="p-2 text-gray-500 hover:text-gray-900 transition-colors" title="ログアウト">
-              <LogOut size={20} />
-            </button>
-          </form>
+          <Link href="/recipes/profile" className="p-2 text-gray-500 hover:text-gray-900 transition-colors" title="マイページ">
+            <User size={24} />
+          </Link>
         </div>
       </header>
 
