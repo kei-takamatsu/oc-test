@@ -1,0 +1,14 @@
+{
+  "name": "StoryWeaver",
+  "short_name": "StoryWeaver",
+  "description": "AI絵本ジェネレーター - ストーリーから美しい絵本を生成",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdfaf5",
+  "theme_color": "#8e7dbe",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

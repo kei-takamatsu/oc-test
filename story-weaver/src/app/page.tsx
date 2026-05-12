@@ -5,6 +5,7 @@ import { Upload, Image as ImageIcon, FileText, Printer, BookOpen, ChevronLeft, C
 import jsPDF from 'jspdf';
 import PageManager from './PageManager';
 import { BookPage, OUTPUT_PAPERS, parseStoryToPages, createPageId } from './types';
+import NarrationPlayer from './NarrationPlayer';
 
 export default function Home() {
   const [affinity, setAffinity] = useState(5);
@@ -655,6 +656,9 @@ export default function Home() {
             <ChevronRight size={24} />
           </button>
         </div>
+
+        {/* Narration Player */}
+        <NarrationPlayer pages={pages} currentPage={currentPage} onPageChange={setCurrentPage} />
       </section>
     </main>
   );
